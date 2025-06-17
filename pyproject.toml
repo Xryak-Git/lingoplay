@@ -1,0 +1,21 @@
+[project]
+name = "lingoplay"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "aiosqlite>=0.21.0",
+    "alembic>=1.16.2",
+    "authx>=1.4.3",
+    "bcrypt>=4.3.0",
+    "python-dotenv>=1.1.0",
+    "sqlalchemy>=2.0.41",
+    "uvicorn>=0.34.3",
+]
+
+[dependency-groups]
+dev = [
+    "fastapi>=0.115.12",
+    "ruff>=0.11.13",
+]
