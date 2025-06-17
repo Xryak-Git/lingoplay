@@ -1,7 +1,9 @@
 import re
+from typing import Annotated
 
+from fastapi import Depends
 from sqlalchemy.orm import DeclarativeBase, declared_attr
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 
 from src.config import SQLALCHEMY_DATABASE_URI
 
@@ -13,6 +15,8 @@ new_session = async_sessionmaker(engine, expire_on_commit=False)
 async def get_session():
     async with new_session() as session:
         yield session
+
+DbSession = Annotated[AsyncSession, Depends(get_session)]
 
 def resolve_table_name(name):
     """Resolves table names to their mapped names."""

@@ -3,7 +3,8 @@ import string
 
 import bcrypt
 from authx import AuthX, AuthXConfig
-from sqlalchemy import Column, Integer, LargeBinary, String
+from sqlalchemy import Integer, LargeBinary, String
+from sqlalchemy.orm import Mapped, mapped_column
 
 from src.database.core import Base
 
@@ -38,10 +39,10 @@ def hash_password(password: str):
 
 
 class LingoplayUser(Base):
-    id = Column(Integer, primary_key=True)
-    username = Column(String, unique=True)
-    email = Column(String, unique=True)
-    password = Column(LargeBinary, nullable=False)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    email: Mapped[str] = mapped_column(String, unique=True, index=True)
+    username: Mapped[str] = mapped_column(String, unique=True)
+    password: Mapped[str] = mapped_column(LargeBinary)
 
     def verify_password(self, password: str) -> bool:
         """Check if the provided password matches the stored hash."""

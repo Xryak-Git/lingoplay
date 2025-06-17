@@ -9,6 +9,7 @@ dependencies = [
     "alembic>=1.16.2",
     "authx>=1.4.3",
     "bcrypt>=4.3.0",
+    "pydantic[email]>=2.11.7",
     "python-dotenv>=1.1.0",
     "sqlalchemy>=2.0.41",
     "uvicorn>=0.34.3",
