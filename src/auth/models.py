@@ -2,18 +2,16 @@ import secrets
 import string
 
 import bcrypt
-from authx import AuthX, AuthXConfig
-from sqlalchemy import Integer, LargeBinary, String
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import ForeignKey, Integer, LargeBinary, String
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.database.core import Base
 
-config = AuthXConfig()
-config.JWT_SECRET_KEY = "SECRET_KEY"
-config.JWT_ACCESS_COOKIE_NAME = "my_access_token"
-config.JWT_TOKEN_LOCATION = ["cookies"]
+JWT_SECRET_KEY = "SECRET_KEY"
+REFRESH_SECRET_KEY = "SECRET_KEY_REFRESH"
 
-security = AuthX(config=config)
+JWT_ACCESS_TOKEN_EXPIRES_MINUTES = 3
+JWT_REFRESH_TOKEN_EXPIRES_MINUTES = 60
 
 
 def generate_password():
@@ -44,6 +42,8 @@ class LingoplayUser(Base):
     username: Mapped[str] = mapped_column(String, unique=True)
     password: Mapped[str] = mapped_column(LargeBinary)
 
+    token: Mapped["UserTokens"] = relationship(back_populates="user", uselist=False)
+
     def verify_password(self, password: str) -> bool:
         """Check if the provided password matches the stored hash."""
         if not password or not self.password:
@@ -56,8 +56,10 @@ class LingoplayUser(Base):
             raise ValueError("Password cannot be empty")
         self.password = hash_password(password)
 
-    @property
-    def token(self):
-        """Generate a JWT token for the user."""
-        token = security.create_access_token(uid=self.username)
-        return token
+
+class UserTokens(Base):
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    refresh_token: Mapped[str] = mapped_column(String, unique=True, index=True)
+
+    user_id: Mapped[int] = mapped_column(ForeignKey("lingoplay_user.id"), unique=True)
+    user: Mapped["LingoplayUser"] = relationship(back_populates="token", uselist=False)

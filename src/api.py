@@ -3,6 +3,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from src.auth.views import router as auth_router
 
+
 class ErrorMessage(BaseModel):
     """Represents a single error message."""
 

@@ -12,11 +12,14 @@ engine = create_async_engine(SQLALCHEMY_DATABASE_URI)
 
 new_session = async_sessionmaker(engine, expire_on_commit=False)
 
+
 async def get_session():
     async with new_session() as session:
         yield session
 
+
 DbSession = Annotated[AsyncSession, Depends(get_session)]
+
 
 def resolve_table_name(name):
     """Resolves table names to their mapped names."""

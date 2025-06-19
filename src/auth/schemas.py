@@ -10,13 +10,7 @@ class UserRead(BaseModel):
     id: PrimaryKey
     email: EmailStr
 
-    @field_validator("email")
-    @classmethod
-    def email_required(cls, v):
-        """Ensure the email field is not empty."""
-        if not v:
-            raise ValueError("Must not be empty string and must be a email")
-        return v
+    model_config = {"from_attributes": True}
 
 
 class UserCreate(BaseModel):
@@ -30,12 +24,12 @@ class UserCreate(BaseModel):
         """Hash the password before storing."""
         return hash_password(str(v))
 
+
 class UserLogin(BaseModel):
     """Pydantic model for user login data."""
 
     email: EmailStr
     password: str
-
 
     @field_validator("email")
     @classmethod
@@ -58,3 +52,4 @@ class UserLoginResponse(BaseModel):
     """Pydantic model for the response after user login."""
 
     token: str | None = None
+    user: UserRead

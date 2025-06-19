@@ -6,7 +6,7 @@ from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
-from src.auth.models import LingoplayUser  #noqa
+from src.auth.models import LingoplayUser, UserTokens  # noqa
 from src.config import SQLALCHEMY_DATABASE_URI
 from src.database.core import Base
 
@@ -14,7 +14,9 @@ from src.database.core import Base
 # access to the values within the .ini file in use.
 config = context.config
 
-config.set_main_option("sqlalchemy.url", SQLALCHEMY_DATABASE_URI + "?async_fallback=True")
+config.set_main_option(
+    "sqlalchemy.url", SQLALCHEMY_DATABASE_URI + "?async_fallback=True"
+)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
