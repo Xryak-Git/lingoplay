@@ -1,16 +1,7 @@
 from pydantic import BaseModel, EmailStr, field_validator
 
-from src.auth.models import hash_password
-from src.models import PrimaryKey
-
-
-class UserRead(BaseModel):
-    """Pydantic model for reading user data."""
-
-    id: PrimaryKey
-    email: EmailStr
-
-    model_config = {"from_attributes": True}
+from src.users.models import hash_password
+from src.users.schemas import UserRead
 
 
 class UserCreate(BaseModel):

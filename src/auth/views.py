@@ -1,9 +1,9 @@
 from fastapi import APIRouter, HTTPException, status, Response
 
-from src.auth.schemas import UserCreate, UserLogin, UserLoginResponse, UserRead
-from src.auth.service import create, generate_tokens, get, get_by_email, save_token
+from src.auth.schemas import UserCreate, UserLogin, UserLoginResponse
+from src.users.schemas import UserRead
+from src.auth.service import create, generate_tokens, get_by_email, save_token
 from src.database.core import DbSession
-from src.models import PrimaryKey
 
 router = APIRouter()
 
@@ -29,19 +29,6 @@ async def create_user(
     return user
 
 
-@router.get("/{user_id}", response_model=UserRead)
-async def get_user(db_session: DbSession, user_id: PrimaryKey):
-    """Get a user."""
-    user = await get(db_session=db_session, user_id=user_id)
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=[{"msg": "A user with this id does not exist."}],
-        )
-
-    return user
-
-
 @router.post("/login", response_model=UserLoginResponse)
 async def login(
     user_login: UserLogin,
@@ -60,7 +47,14 @@ async def login(
         await save_token(
             db_session=db_session, user_id=user.id, refresh_token=refresh_token
         )
-
+        response.set_cookie(
+            key="access_token",
+            value=jwt_token,
+            # httponly=True,
+            # secure=False,
+            # samesite="lax",
+            max_age=3600,
+        )
         return {"token": jwt_token, "user": UserRead.model_validate(user)}
 
     raise HTTPException(

@@ -1,12 +1,12 @@
 # src/crud/user.py
 
-import datetime
+from datetime import datetime, timedelta, timezone
 import jwt
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.auth.models import (
+from src.users.models import (
     JWT_ACCESS_TOKEN_EXPIRES_MINUTES,
     JWT_REFRESH_TOKEN_EXPIRES_MINUTES,
     JWT_SECRET_KEY,
@@ -45,9 +45,9 @@ async def create(db_session: AsyncSession, user_in: UserCreate) -> LingoplayUser
 
 
 async def generate_tokens(user: LingoplayUser):
-    now = datetime.datetime.now(datetime.timezone.utc)
-    jwt_timedelta = datetime.timedelta(minutes=JWT_ACCESS_TOKEN_EXPIRES_MINUTES)
-    refresh_timedelta = datetime.timedelta(minutes=JWT_REFRESH_TOKEN_EXPIRES_MINUTES)
+    now = datetime.now(timezone(timedelta(hours=3)))
+    jwt_timedelta = timedelta(minutes=JWT_ACCESS_TOKEN_EXPIRES_MINUTES)
+    refresh_timedelta = timedelta(minutes=JWT_REFRESH_TOKEN_EXPIRES_MINUTES)
 
     jwt_payload = {
         "id": user.id,
