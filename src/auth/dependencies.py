@@ -13,7 +13,7 @@ security = HTTPBearer()
 
 
 async def get_current_user(
-    db_session: DbSession, credentials: HTTPAuthorizationCredentials = Depends(security)
+    db_session: DbSession, credentials: Annotated[HTTPAuthorizationCredentials, Depends(security)]
 ) -> LingoplayUser:
     token = credentials.credentials
     try:

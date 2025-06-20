@@ -37,7 +37,7 @@ async def create(db_session: AsyncSession, user_in: UserCreate) -> LingoplayUser
         return user
     except IntegrityError:
         await db_session.rollback()
-        raise ValueError("User with this email or username already exists")
+        raise ValueError("User with this email or username already exists") from None
 
 
 async def generate_tokens(user: LingoplayUser):
