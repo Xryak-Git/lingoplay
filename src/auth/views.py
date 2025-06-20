@@ -1,9 +1,9 @@
-from fastapi import APIRouter, HTTPException, status, Response
+from fastapi import APIRouter, HTTPException, Response, status
 
 from src.auth.schemas import UserCreate, UserLogin, UserLoginResponse
-from src.users.schemas import UserRead
 from src.auth.service import create, generate_tokens, get_by_email, save_token
 from src.database.core import DbSession
+from src.users.schemas import UserRead
 
 router = APIRouter()
 
@@ -44,9 +44,7 @@ async def login(
 
     if user.verify_password(user_login.password):
         jwt_token, refresh_token = await generate_tokens(user)
-        await save_token(
-            db_session=db_session, user_id=user.id, refresh_token=refresh_token
-        )
+        await save_token(db_session=db_session, user_id=user.id, refresh_token=refresh_token)
         response.set_cookie(
             key="access_token",
             value=jwt_token,

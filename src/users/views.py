@@ -4,7 +4,6 @@ from src.auth.dependencies import CurrentUser
 from src.auth.schemas import UserRead
 from src.database.core import DbSession
 
-
 router = APIRouter()
 
 

@@ -2,11 +2,10 @@ import re
 from typing import Annotated
 
 from fastapi import Depends
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, declared_attr
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 
 from src.config import SQLALCHEMY_DATABASE_URI
-
 
 engine = create_async_engine(SQLALCHEMY_DATABASE_URI)
 

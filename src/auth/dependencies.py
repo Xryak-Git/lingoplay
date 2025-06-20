@@ -1,11 +1,13 @@
 from typing import Annotated
-from fastapi import Depends, HTTPException
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-import jwt
 
+import jwt
+from fastapi import Depends, HTTPException
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+
+from src import config
 from src.auth.service import get as get_user
 from src.database.core import DbSession
-from src.users.models import JWT_SECRET_KEY, LingoplayUser
+from src.users.models import LingoplayUser
 
 security = HTTPBearer()
 
@@ -15,12 +17,12 @@ async def get_current_user(
 ) -> LingoplayUser:
     token = credentials.credentials
     try:
-        payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=["HS256"])
+        payload = jwt.decode(token, config.JWT_SECRET_KEY, algorithms=["HS256"])
         return await get_user(db_session=db_session, user_id=payload.get("id"))
     except jwt.ExpiredSignatureError:
-        raise HTTPException(status_code=401, detail="Token expired")
+        raise HTTPException(status_code=401, detail="Token expired") from None
     except jwt.InvalidTokenError:
-        raise HTTPException(status_code=401, detail="Invalid token")
+        raise HTTPException(status_code=401, detail="Invalid token") from None
 
 
 CurrentUser = Annotated[LingoplayUser, Depends(get_current_user)]

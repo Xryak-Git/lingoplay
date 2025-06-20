@@ -1,20 +1,18 @@
 # src/crud/user.py
 
 from datetime import datetime, timedelta, timezone
+
 import jwt
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src import config
+from src.auth.schemas import UserCreate
 from src.users.models import (
-    JWT_ACCESS_TOKEN_EXPIRES_MINUTES,
-    JWT_REFRESH_TOKEN_EXPIRES_MINUTES,
-    JWT_SECRET_KEY,
-    REFRESH_SECRET_KEY,
     LingoplayUser,
     UserTokens,
 )
-from src.auth.schemas import UserCreate
 
 
 async def get(*, db_session: AsyncSession, user_id: int) -> LingoplayUser | None:
@@ -31,9 +29,7 @@ async def get_by_email(*, db_session: AsyncSession, email: str) -> LingoplayUser
 
 async def create(db_session: AsyncSession, user_in: UserCreate) -> LingoplayUser:
     password = bytes(user_in.password, "utf-8")
-    user = LingoplayUser(
-        email=user_in.email, username=user_in.username, password=password
-    )
+    user = LingoplayUser(email=user_in.email, username=user_in.username, password=password)
     db_session.add(user)
     try:
         await db_session.commit()
@@ -46,8 +42,8 @@ async def create(db_session: AsyncSession, user_in: UserCreate) -> LingoplayUser
 
 async def generate_tokens(user: LingoplayUser):
     now = datetime.now(timezone(timedelta(hours=3)))
-    jwt_timedelta = timedelta(minutes=JWT_ACCESS_TOKEN_EXPIRES_MINUTES)
-    refresh_timedelta = timedelta(minutes=JWT_REFRESH_TOKEN_EXPIRES_MINUTES)
+    jwt_timedelta = timedelta(minutes=config.JWT_ACCESS_TOKEN_EXPIRES_MINUTES)
+    refresh_timedelta = timedelta(minutes=config.JWT_REFRESH_TOKEN_EXPIRES_MINUTES)
 
     jwt_payload = {
         "id": user.id,
@@ -60,8 +56,8 @@ async def generate_tokens(user: LingoplayUser):
     refresh_jwt_payload = jwt_payload.copy()
     refresh_jwt_payload["exp"] = int((now + refresh_timedelta).timestamp())
 
-    access_jwt = jwt.encode(jwt_payload, JWT_SECRET_KEY, algorithm="HS256")
-    refresh_jwt = jwt.encode(refresh_jwt_payload, REFRESH_SECRET_KEY, algorithm="HS256")
+    access_jwt = jwt.encode(jwt_payload, config.JWT_SECRET_KEY, algorithm="HS256")
+    refresh_jwt = jwt.encode(refresh_jwt_payload, config.REFRESH_SECRET_KEY, algorithm="HS256")
 
     return [access_jwt, refresh_jwt]
 

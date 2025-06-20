@@ -21,3 +21,22 @@ dev = [
     "fastapi>=0.115.12",
     "ruff>=0.11.13",
 ]
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+extend-select = ["I", "F", "E", "W", "UP", "SIM", "B", "Q", "C4"]
+fix = true
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "auto"
+docstring-code-format = true
+skip-magic-trailing-comma = false
+
+[tool.ruff.lint.isort]
+known-first-party = ["lingoplay"]
+combine-as-imports = true
+force-wrap-aliases = true
+

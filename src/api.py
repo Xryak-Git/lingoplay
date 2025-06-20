@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
+
 from src.auth.views import router as auth_router
 from src.users.views import router as users_router
 

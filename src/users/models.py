@@ -7,12 +7,6 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.database.core import Base
 
-JWT_SECRET_KEY = "SECRET_KEY"
-REFRESH_SECRET_KEY = "SECRET_KEY_REFRESH"
-
-JWT_ACCESS_TOKEN_EXPIRES_MINUTES = 3
-JWT_REFRESH_TOKEN_EXPIRES_MINUTES = 60
-
 
 def generate_password():
     """Generate a random, strong password with at least one lowercase, one uppercase, and three digits."""
