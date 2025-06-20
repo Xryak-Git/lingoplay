@@ -50,9 +50,6 @@ async def login(
         response.set_cookie(
             key="access_token",
             value=jwt_token,
-            # httponly=True,
-            # secure=False,
-            # samesite="lax",
             max_age=3600,
         )
         return {"token": jwt_token, "user": UserRead.model_validate(user)}
