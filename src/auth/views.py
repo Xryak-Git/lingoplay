@@ -1,6 +1,7 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
+from fastapi.responses import RedirectResponse
 
 from src.auth.dependencies import auth_service
 from src.auth.schemas import UserLogin, UserLoginResponse
@@ -30,13 +31,40 @@ async def login(
         jwt_token, refresh_token = await auth_service.generate_tokens(user)
         await auth_service.save_token(user_id=user.id, refresh_token=refresh_token)
         response.set_cookie(
-            key="access_token",
-            value=jwt_token,
+            key="refresh_token",
+            value=refresh_token,
             max_age=3600,
+            httponly=True,
+            path="/",
+            samesite="lax",
         )
+
         return {"token": jwt_token, "user": UserRead.model_validate(user)}
 
     raise HTTPException(
         status_code=status.HTTP_403_FORBIDDEN,
         detail=[{"msg": "Password is wrong"}],
     )
+
+
+@router.post("/refresh")
+async def refresh(
+    request: Request,
+    response: Response,
+    auth_service: Annotated[AuthService, Depends(auth_service)],
+) -> UserLoginResponse:
+    refresh_token = request.cookies.get("refresh_token")
+    if not refresh_token:
+        return RedirectResponse(url="/auth/login", status_code=303)
+    access_token, refresh_token, user = await auth_service.refresh_tokens(refresh_token)
+
+    response.set_cookie(
+        key="refresh_token",
+        value=refresh_token,
+        max_age=3600,
+        httponly=True,
+        path="/",
+        samesite="lax",
+    )
+
+    return {"token": access_token, "user": UserRead.model_validate(user)}
