@@ -1,19 +1,6 @@
 from pydantic import BaseModel, EmailStr, field_validator
 
-from src.users.models import hash_password
 from src.users.schemas import UserRead
-
-
-class UserCreate(BaseModel):
-    email: EmailStr
-    username: str
-    password: str | None = None
-
-    @field_validator("password", mode="before")
-    @classmethod
-    def hash(cls, v):
-        """Hash the password before storing."""
-        return hash_password(str(v))
 
 
 class UserLogin(BaseModel):

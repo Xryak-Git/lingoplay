@@ -2,7 +2,7 @@ import secrets
 import string
 
 import bcrypt
-from sqlalchemy import ForeignKey, Integer, LargeBinary, String
+from sqlalchemy import LargeBinary
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.database.core import Base
@@ -31,12 +31,12 @@ def hash_password(password: str):
 
 
 class LingoplayUser(Base):
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    email: Mapped[str] = mapped_column(String, unique=True, index=True)
-    username: Mapped[str] = mapped_column(String, unique=True)
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    email: Mapped[str] = mapped_column(unique=True, index=True)
+    username: Mapped[str] = mapped_column(unique=True)
     password: Mapped[str] = mapped_column(LargeBinary)
 
-    token: Mapped["UserTokens"] = relationship(back_populates="user", uselist=False)
+    token: Mapped["UserTokens"] = relationship(back_populates="user", uselist=False)  # noqa: F821
 
     def verify_password(self, password: str) -> bool:
         if not password or not self.password:
@@ -50,11 +50,3 @@ class LingoplayUser(Base):
 
     def __repr__(self):
         return f"LingoplayUser(id={self.id}, email='{self.email}', username='{self.username}')"
-
-
-class UserTokens(Base):
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    refresh_token: Mapped[str] = mapped_column(String, unique=True, index=True)
-
-    user_id: Mapped[int] = mapped_column(ForeignKey("lingoplay_user.id"), unique=True)
-    user: Mapped["LingoplayUser"] = relationship(back_populates="token", uselist=False)

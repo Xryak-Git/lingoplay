@@ -1,41 +1,25 @@
-from fastapi import APIRouter, HTTPException, Response, status
+from typing import Annotated
 
-from src.auth.schemas import UserCreate, UserLogin, UserLoginResponse
-from src.auth.service import create, generate_tokens, get_by_email, save_token
-from src.database.core import DbSession
+from fastapi import APIRouter, Depends, HTTPException, Response, status
+
+from src.auth.dependencies import auth_service
+from src.auth.schemas import UserLogin, UserLoginResponse
+from src.auth.service import AuthService
+from src.users.dependencies import user_service
 from src.users.schemas import UserRead
+from src.users.service import UsersService
 
 router = APIRouter()
 
 
-@router.post(
-    "",
-    response_model=UserRead,
-)
-async def create_user(
-    user_in: UserCreate,
-    db_session: DbSession,
-):
-    """Creates a new user."""
-    user = await get_by_email(db_session=db_session, email=user_in.email)
-
-    if user:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail={"email": "A user with this email already exists."},
-        )
-
-    user = await create(db_session=db_session, user_in=user_in)
-    return user
-
-
-@router.post("/login", response_model=UserLoginResponse)
+@router.post("/login")
 async def login(
     user_login: UserLogin,
     response: Response,
-    db_session: DbSession,
-):
-    user = await get_by_email(db_session=db_session, email=user_login.email)
+    auth_service: Annotated[AuthService, Depends(auth_service)],
+    user_service: Annotated[UsersService, Depends(user_service)],
+) -> UserLoginResponse:
+    user = await user_service.get_by_email(email=user_login.email)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -43,8 +27,8 @@ async def login(
         )
 
     if user.verify_password(user_login.password):
-        jwt_token, refresh_token = await generate_tokens(user)
-        await save_token(db_session=db_session, user_id=user.id, refresh_token=refresh_token)
+        jwt_token, refresh_token = await auth_service.generate_tokens(user)
+        await auth_service.save_token(user_id=user.id, refresh_token=refresh_token)
         response.set_cookie(
             key="access_token",
             value=jwt_token,
