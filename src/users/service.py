@@ -1,4 +1,6 @@
+from src.errors import UniqueConstraintViolation
 from src.repository import AbstractRepository
+from src.users.errors import UserAlreadyExistsError
 from src.users.models import LingoplayUser
 from src.users.schemas import UserCreate
 
@@ -9,7 +11,12 @@ class UsersService:
 
     async def add(self, user: UserCreate) -> LingoplayUser:
         user_dict = user.model_dump()
-        user = await self._repository.create_one(user_dict)
+
+        try:
+            user = await self._repository.create_one(user_dict)
+        except UniqueConstraintViolation as e:
+            raise UserAlreadyExistsError(field=e.field, value=e.value) from e
+
         return user
 
     async def get(self, user_id: int) -> LingoplayUser | None:

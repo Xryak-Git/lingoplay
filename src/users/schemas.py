@@ -9,6 +9,7 @@ class UserRead(BaseModel):
 
     id: PrimaryKey
     email: EmailStr
+    username: str
 
     class Config:
         from_attributes = True

@@ -9,13 +9,14 @@ from src.auth.repository import AuthRepository
 from src.auth.service import AuthService
 from src.users.dependencies import user_service
 from src.users.models import LingoplayUser
+from src.users.repository import UserRepository
 from src.users.service import UsersService
 
 security = HTTPBearer()
 
 
 def auth_service():
-    return AuthService(AuthRepository())
+    return AuthService(AuthRepository(), UserRepository())
 
 
 async def get_current_user(

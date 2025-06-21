@@ -3,6 +3,7 @@
 from datetime import datetime, timedelta, timezone
 
 import jwt
+from fastapi import HTTPException
 
 from src import config
 from src.auth.models import UserTokens
@@ -13,8 +14,9 @@ from src.users.models import (
 
 
 class AuthService:
-    def __init__(self, repository: AlchemyRepository):
-        self._repository = repository
+    def __init__(self, tokens_rep: AlchemyRepository, users_rep: AlchemyRepository):
+        self._tokens_rep = tokens_rep
+        self._users_rep = users_rep
 
     async def generate_tokens(self, user: LingoplayUser):
         now = datetime.now(timezone(timedelta(hours=3)))
@@ -38,7 +40,38 @@ class AuthService:
         return [access_jwt, refresh_jwt]
 
     async def save_token(self, user_id: int, refresh_token: str) -> UserTokens:
-        user_token = self._repository.update_or_create(
+        user_token = await self._tokens_rep.update_or_create(
             filters={"user_id": user_id}, values={"refresh_token": refresh_token}
         )
         return user_token
+
+    async def _validate_token(self, token: str, key: str):
+        try:
+            user_data = jwt.decode(token, key, algorithms=["HS256"])
+            print(user_data, "user_data")
+            return user_data
+        except jwt.ExpiredSignatureError:
+            raise HTTPException(status_code=401, detail="Token expired") from None
+        except jwt.InvalidTokenError:
+            raise HTTPException(status_code=401, detail="Invalid token") from None
+
+    async def validate_refresh_token(self, token: str) -> dict:
+        return await self._validate_token(token, config.REFRESH_SECRET_KEY)
+
+    async def validate_access_token(self, token: str) -> dict:
+        return await self._validate_token(token, config.JWT_SECRET_KEY)
+
+    async def refresh_tokens(self, refresh_token: str) -> tuple[str, str, LingoplayUser]:
+        user_data = await self.validate_refresh_token(refresh_token)
+
+        db_token = await self._tokens_rep.get_by(refresh_token=refresh_token)
+        if not db_token:
+            raise HTTPException(status_code=401, detail="User not authorized") from None
+
+        user = await self._users_rep.get_by(id=user_data.get("id"))
+        print(user, "user")
+        access_token, refresh_token = await self.generate_tokens(user)
+
+        await self.save_token(user.id, refresh_token)
+
+        return access_token, refresh_token, user
