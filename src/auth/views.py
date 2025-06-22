@@ -4,10 +4,9 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from fastapi.responses import JSONResponse
 
 from src.auth.dependencies import auth_service
-from src.auth.schemas import UserLogin, UserLoginResponse
 from src.auth.service import AuthService
 from src.users.dependencies import user_service
-from src.users.schemas import UserCreate, UserRead
+from src.users.schemas import UserCreate, UserLogin, UserLoginResponse, UserRead
 from src.users.service import UsersService
 
 router = APIRouter()
