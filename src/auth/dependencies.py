@@ -1,8 +1,9 @@
 from typing import Annotated
 
 import jwt
-from fastapi import Depends, HTTPException
+from fastapi import Depends, HTTPException, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from src import config
 from src.auth.repository import AuthRepository
@@ -12,7 +13,18 @@ from src.users.models import LingoplayUser
 from src.users.repository import UserRepository
 from src.users.service import UsersService
 
-security = HTTPBearer()
+
+class CustomHTTPBearer(HTTPBearer):
+    async def __call__(self, request: Request) -> HTTPAuthorizationCredentials:
+        try:
+            return await super().__call__(request)
+        except StarletteHTTPException as e:
+            if e.status_code == 403:
+                raise HTTPException(status_code=401, detail="Not authenticated") from e
+            raise e
+
+
+security = CustomHTTPBearer()
 
 
 def auth_service():

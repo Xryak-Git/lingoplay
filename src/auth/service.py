@@ -45,16 +45,6 @@ class AuthService:
         )
         return user_token
 
-    async def _validate_token(self, token: str, key: str):
-        try:
-            user_data = jwt.decode(token, key, algorithms=["HS256"])
-            print(user_data, "user_data")
-            return user_data
-        except jwt.ExpiredSignatureError:
-            raise HTTPException(status_code=401, detail="Token expired") from None
-        except jwt.InvalidTokenError:
-            raise HTTPException(status_code=401, detail="Invalid token") from None
-
     async def validate_refresh_token(self, token: str) -> dict:
         return await self._validate_token(token, config.REFRESH_SECRET_KEY)
 
@@ -75,3 +65,16 @@ class AuthService:
         await self.save_token(user.id, refresh_token)
 
         return access_token, refresh_token, user
+
+    async def logout(self, refresh_token: str):
+        await self._tokens_rep.delete_by(refresh_token=refresh_token)
+
+    async def _validate_token(self, token: str, key: str):
+        try:
+            user_data = jwt.decode(token, key, algorithms=["HS256"])
+            print(user_data, "user_data")
+            return user_data
+        except jwt.ExpiredSignatureError:
+            raise HTTPException(status_code=401, detail="Token expired") from None
+        except jwt.InvalidTokenError:
+            raise HTTPException(status_code=401, detail="Invalid token") from None

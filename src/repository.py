@@ -1,7 +1,7 @@
 import re
 from abc import ABC, abstractmethod
 
-from sqlalchemy import and_, insert, select, update
+from sqlalchemy import and_, delete, insert, select, update
 from sqlalchemy.exc import IntegrityError
 
 from src.database.core import new_session
@@ -54,9 +54,9 @@ class AlchemyRepository(AbstractRepository):
                 # Универсальная обработка UNIQUE constraint
                 field_name = self._extract_unique_field_from_message(error_message)
                 if field_name:
-                    raise UniqueConstraintViolation(field_name, data.get(field_name, "???"))
+                    raise UniqueConstraintViolation(field_name, data.get(field_name, "???")) from e
 
-                raise DatabaseCommitError()
+                raise DatabaseCommitError() from e
 
     async def get_by(self, **kwargs):
         async with new_session() as session:
@@ -104,6 +104,14 @@ class AlchemyRepository(AbstractRepository):
                 result = await session.execute(select(self.model).where(and_(*conditions)))
                 instance = result.scalar_one()
                 return instance, False
+
+    async def delete_by(self, **kwargs) -> int:
+        async with new_session() as session:
+            conditions = [getattr(self.model, key) == value for key, value in kwargs.items()]
+            stmt = delete(self.model).where(and_(*conditions))
+            result = await session.execute(stmt)
+            await session.commit()
+            return result.rowcount
 
     def _extract_unique_field_from_message(self, message: str) -> str | None:
         """

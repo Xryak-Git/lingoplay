@@ -1,7 +1,6 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
-from fastapi.responses import RedirectResponse
 
 from src.auth.dependencies import auth_service
 from src.auth.schemas import UserLogin, UserLoginResponse
@@ -55,7 +54,7 @@ async def refresh(
 ) -> UserLoginResponse:
     refresh_token = request.cookies.get("refresh_token")
     if not refresh_token:
-        return RedirectResponse(url="/auth/login", status_code=303)
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=[{"msg": "no refresh token"}])
     access_token, refresh_token, user = await auth_service.refresh_tokens(refresh_token)
 
     response.set_cookie(
@@ -68,3 +67,18 @@ async def refresh(
     )
 
     return {"token": access_token, "user": UserRead.model_validate(user)}
+
+
+@router.post("/logout")
+async def logout(
+    request: Request,
+    response: Response,
+    auth_service: Annotated[AuthService, Depends(auth_service)],
+):
+    refresh_token = request.cookies.get("refresh_token")
+    if not refresh_token:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=[{"msg": "user is not authorized"}])
+    await auth_service.logout(refresh_token)
+
+    response.delete_cookie(key="refresh_token")
+    return {"detail": "Logged out"}
