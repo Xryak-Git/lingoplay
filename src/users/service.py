@@ -26,3 +26,11 @@ class UsersService:
     async def get_by_email(self, email: str) -> LingoplayUser | None:
         user = await self._repository.get_by(email=email)
         return user
+
+    async def get_by_username(self, username: str) -> LingoplayUser | None:
+        user = await self._repository.get_by(username=username)
+        return user
+
+    async def exists(self, **kwargs) -> bool:
+        user = await self._repository.get_by_or(**kwargs)
+        return user is not None

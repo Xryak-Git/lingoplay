@@ -1,7 +1,7 @@
 import re
 from abc import ABC, abstractmethod
 
-from sqlalchemy import and_, delete, insert, select, update
+from sqlalchemy import and_, delete, insert, or_, select, update
 from sqlalchemy.exc import IntegrityError
 
 from src.database.core import new_session
@@ -11,6 +11,10 @@ from src.errors import DatabaseCommitError, UniqueConstraintViolation
 class AbstractRepository(ABC):
     @abstractmethod
     async def get_by():
+        raise NotImplementedError
+
+    @abstractmethod
+    async def get_by_or():
         raise NotImplementedError
 
     @abstractmethod
@@ -51,7 +55,6 @@ class AlchemyRepository(AbstractRepository):
                 await session.rollback()
                 error_message = str(e.orig)
 
-                # Универсальная обработка UNIQUE constraint
                 field_name = self._extract_unique_field_from_message(error_message)
                 if field_name:
                     raise UniqueConstraintViolation(field_name, data.get(field_name, "???")) from e
@@ -113,22 +116,26 @@ class AlchemyRepository(AbstractRepository):
             await session.commit()
             return result.rowcount
 
+    async def get_by_or(self, **kwargs):
+        async with new_session() as session:
+            conditions = [getattr(self.model, key) == value for key, value in kwargs.items()]
+            stmt = select(self.model).where(or_(*conditions))
+            result = await session.execute(stmt)
+            return result.scalar_one_or_none()
+
     def _extract_unique_field_from_message(self, message: str) -> str | None:
         """
         Универсальный парсер поля из UNIQUE ошибки для SQLite/PostgreSQL/MySQL.
         Возвращает имя поля, если удалось извлечь, иначе None.
         """
-        # SQLite format: UNIQUE constraint failed: tablename.columnname
         match = re.search(r"UNIQUE constraint failed: [\w_]+\.(\w+)", message)
         if match:
             return match.group(1)
 
-        # PostgreSQL format (optional): duplicate key value violates unique constraint "table_column_key"
         match = re.search(r"Key \((\w+)\)=\(.+\) already exists", message)
         if match:
             return match.group(1)
 
-        # MySQL format (optional): Duplicate entry '...' for key 'field'
         match = re.search(r"for key '(\w+)'", message)
         if match:
             return match.group(1)

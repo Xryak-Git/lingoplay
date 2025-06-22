@@ -1,12 +1,13 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
+from fastapi.responses import JSONResponse
 
 from src.auth.dependencies import auth_service
 from src.auth.schemas import UserLogin, UserLoginResponse
 from src.auth.service import AuthService
 from src.users.dependencies import user_service
-from src.users.schemas import UserRead
+from src.users.schemas import UserCreate, UserRead
 from src.users.service import UsersService
 
 router = APIRouter()
@@ -82,3 +83,20 @@ async def logout(
 
     response.delete_cookie(key="refresh_token")
     return {"detail": "Logged out"}
+
+
+@router.post("/registrate")
+async def registrate(
+    user_create: UserCreate,
+    user_service: Annotated[UsersService, Depends(user_service)],
+) -> JSONResponse:
+    user = await user_service.exists(username=user_create.username, email=user_create.email)
+    if user:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=[{"msg": "A user with this email or username already exists"}],
+        )
+
+    user = await user_service.add(user_create)
+
+    return JSONResponse(status_code=201, content={"message": "User registered successfully"})
