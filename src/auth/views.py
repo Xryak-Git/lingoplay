@@ -41,7 +41,7 @@ async def login(
         return {"token": jwt_token, "user": UserRead.model_validate(user)}
 
     raise HTTPException(
-        status_code=status.HTTP_403_FORBIDDEN,
+        status_code=status.HTTP_401_UNAUTHORIZED,
         detail=[{"msg": "Password is wrong"}],
     )
 

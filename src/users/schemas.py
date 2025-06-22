@@ -25,7 +25,7 @@ class UserRead(BaseModel):
 class UserCreate(BaseModel):
     email: EmailStr
     username: str
-    password: str | None = None
+    password: bytes | None = None
 
     @field_validator("password", mode="before")
     @classmethod
@@ -47,12 +47,6 @@ class UserLogin(BaseModel):
         if not v:
             raise ValueError("Must not be empty string and must be a email")
         return v
-
-    @field_validator("password", mode="before")
-    @classmethod
-    def hash(cls, v):
-        """Hash the password before storing."""
-        return hash_password(str(v))
 
     @field_validator("password")
     @classmethod
