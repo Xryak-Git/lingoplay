@@ -1,9 +1,9 @@
-import asyncio
 from contextlib import asynccontextmanager
 
 from aiobotocore.session import get_session
 from botocore.exceptions import ClientError
 
+from src import config
 from src.repository import AlchemyRepository
 from src.users.models import LingoplayUser
 
@@ -12,13 +12,22 @@ class UserRepository(AlchemyRepository):
     model = LingoplayUser
 
 
+def video_repository():
+    return S3Client(
+        access_key=config.S3_ACCESS_KEY,
+        secret_key=config.S3_SECRET_KEY,
+        endpoint_url=config.S3_ENDPOINT_URL,
+        bucket_name="lingoplay",
+    )
+
+
 class S3Client:
     def __init__(
-            self,
-            access_key: str,
-            secret_key: str,
-            endpoint_url: str,
-            bucket_name: str,
+        self,
+        access_key: str,
+        secret_key: str,
+        endpoint_url: str,
+        bucket_name: str,
     ):
         self.config = {
             "aws_access_key_id": access_key,
@@ -34,18 +43,17 @@ class S3Client:
             yield client
 
     async def upload_file(
-            self,
-            file_path: str,
+        self,
+        file_obj,
+        object_name: str,
     ):
-        object_name = file_path.split("/")[-1]
         try:
             async with self.get_client() as client:
-                with open(file_path, "rb") as file:
-                    await client.put_object(
-                        Bucket=self.bucket_name,
-                        Key=object_name,
-                        Body=file,
-                    )
+                await client.put_object(
+                    Bucket=self.bucket_name,
+                    Key=object_name,
+                    Body=file_obj,
+                )
                 print(f"File {object_name} uploaded to {self.bucket_name}")
         except ClientError as e:
             print(f"Error uploading file: {e}")
