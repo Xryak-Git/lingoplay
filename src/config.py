@@ -4,8 +4,10 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-
-SQLALCHEMY_DATABASE_URI: str = os.getenv("SQLALCHEMY_DATABASE_URI", "sqlite+aiosqlite:///lingoplay.db")
+PG_USER: str = os.getenv("PG_USER")
+PG_PASSWORD: str = os.getenv("PG_PASSWORD")
+PG_TABLENAME: str = os.getenv("PG_TABLENAME")
+PG_DATABASE_URI: str = os.getenv("PG_DATABASE_URI")
 
 JWT_SECRET_KEY: str = os.getenv("SECRET_KEY")
 REFRESH_SECRET_KEY = os.getenv("SECRET_KEY_REFRESH")

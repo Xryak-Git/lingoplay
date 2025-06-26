@@ -5,9 +5,9 @@ from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, declared_attr
 
-from src.config import SQLALCHEMY_DATABASE_URI
+from src.config import PG_DATABASE_URI
 
-engine = create_async_engine(SQLALCHEMY_DATABASE_URI)
+engine = create_async_engine(PG_DATABASE_URI)
 
 new_session = async_sessionmaker(engine, expire_on_commit=False)
 
