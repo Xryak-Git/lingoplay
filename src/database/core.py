@@ -2,12 +2,13 @@ import re
 from typing import Annotated
 
 from fastapi import Depends
+from sqlalchemy import MetaData
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, declared_attr
 
 from src.config import PG_DATABASE_URI
 
-engine = create_async_engine(PG_DATABASE_URI)
+engine = create_async_engine(PG_DATABASE_URI, echo=True)
 
 new_session = async_sessionmaker(engine, expire_on_commit=False)
 
@@ -28,6 +29,7 @@ def resolve_table_name(name):
 
 class Base(DeclarativeBase):
     """Base class for all SQLAlchemy models."""
+    metadata = MetaData(schema="public")
 
     @declared_attr.directive
     def __tablename__(cls):
