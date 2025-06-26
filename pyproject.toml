@@ -5,6 +5,7 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
+    "aiobotocore>=2.23.0",
     "aiosqlite>=0.21.0",
     "alembic>=1.16.2",
     "authx>=1.4.3",
@@ -12,6 +13,7 @@ dependencies = [
     "pydantic[email]>=2.11.7",
     "pyjwt[crypto]>=2.10.1",
     "python-dotenv>=1.1.0",
+    "python-multipart>=0.0.20",
     "sqlalchemy>=2.0.41",
     "uvicorn>=0.34.3",
 ]
