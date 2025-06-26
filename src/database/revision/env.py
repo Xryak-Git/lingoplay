@@ -6,9 +6,11 @@ from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
-from src.auth.models import LingoplayUser, UserTokens  # noqa
+from src.auth.models import UserTokens
 from src.config import SQLALCHEMY_DATABASE_URI
 from src.database.core import Base
+from src.users.models import LingoplayUser
+from src.videos.models import Games, Videos
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
