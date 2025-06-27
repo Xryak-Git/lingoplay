@@ -1,9 +1,11 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, File, Form, UploadFile
+from fastapi import APIRouter, Depends, File, Form, UploadFile, status
+from fastapi.responses import JSONResponse
 
 from src.auth.dependencies import CurrentUser
 from src.videos.dependencies import video_service
+from src.videos.schemas import VideoCreate
 from src.videos.service import VideoService
 
 router = APIRouter()
@@ -13,23 +15,13 @@ router = APIRouter()
 async def upload_video(
     file: Annotated[UploadFile, File()],
     title: Annotated[str, Form()],
-    type: Annotated[str, Form()],
+    game_ids: Annotated[set[int], Form()],
     current_user: CurrentUser,
     video_service: Annotated[VideoService, Depends(video_service)],
-):
+) -> JSONResponse:
     """Creates new video and uploads to S3"""
-    object_name = file.filename
-    await video_service.add(file_obj=file.file, object_name=object_name, user=current_user)
+    data = VideoCreate(file=file, title=title, game_ids=game_ids, user_id=current_user.id)
+    await video_service.add(data)
 
-    return {"filename": file.filename, "title": title, "type": type}
+    return JSONResponse(status_code=status.HTTP_201_CREATED, content={"message": "Видео загружено и начало обрабатываться"})
 
-
-# @router.get("/")
-# async def all_videos(
-#     s3_client: Annotated[S3Repository, Depends(video_repository)],
-# ):
-#     """Creates new video and uploads to S3"""
-#     data = await s3_client.get_by(key="Pictures/1.gif")
-#     print(data)
-
-#     return data
