@@ -5,7 +5,7 @@ from contextlib import asynccontextmanager
 
 from aiobotocore.session import get_session
 from botocore.exceptions import ClientError
-from sqlalchemy import and_, delete, insert, or_, select, update
+from sqlalchemy import and_, delete, exists, insert, or_, select, update
 from sqlalchemy.exc import IntegrityError
 from types_aiobotocore_s3.client import S3Client
 
@@ -36,6 +36,10 @@ class AbstractRepository(ABC):
 
     @abstractmethod
     async def update_by():
+        raise NotImplementedError
+
+    @abstractmethod
+    async def exsists():
         raise NotImplementedError
 
 
@@ -147,6 +151,13 @@ class AlchemyRepository(AbstractRepository):
 
         return None
 
+    async def exists(self, **kwargs) -> bool:
+        async with new_session() as session:
+            conditions = [getattr(self.model, key) == value for key, value in kwargs.items()]
+            stmt = select(exists().where(and_(*conditions)))
+            result = await session.execute(stmt)
+            return result.scalar()
+
 
 class S3Repository:
     def __init__(self, access_key: str, secret_key: str, endpoint_url: str, bucket_name: str):
@@ -187,3 +198,7 @@ class S3Repository:
                 await client.delete_object(Bucket=self.bucket_name, Key=object_name)
         except ClientError as e:
             print(f"Error deleting file: {e}")
+
+    @property
+    def url(self):
+        return self.config.get("endpoint_url")
