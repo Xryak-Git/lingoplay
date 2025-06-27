@@ -1,7 +1,7 @@
 from src.errors import AlreadyExistsError
 from src.repository import AbstractRepository
-from src.videos.errors import VideoAlreadyUploadedError
-from src.videos.schemas import VideoCreate
+from src.uploads.errors import VideoAlreadyUploadedError
+from src.uploads.schemas import VideoCreate
 
 
 class VideoService:

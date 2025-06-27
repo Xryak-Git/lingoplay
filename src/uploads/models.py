@@ -2,8 +2,8 @@ from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.database.core import Base
+from src.uploads.association_tables import videos_games_association
 from src.users.models import LingoplayUser
-from src.videos.association_tables import videos_games_association
 
 
 class Games(Base):

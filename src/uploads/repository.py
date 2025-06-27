@@ -5,8 +5,8 @@ from sqlalchemy import exists, select
 from src.database.core import new_session
 from src.errors import AlreadyExistsError
 from src.repository import AlchemyRepository, S3Repository
-from src.videos.models import Games, Videos
-from src.videos.schemas import VideoCreate
+from src.uploads.models import Games, Videos
+from src.uploads.schemas import VideoCreate
 
 
 class VideoRepository(AlchemyRepository):

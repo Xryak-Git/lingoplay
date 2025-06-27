@@ -3,8 +3,8 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 from src.auth.views import router as auth_router
+from src.uploads.views import router as video_router
 from src.users.views import router as users_router
-from src.videos.views import router as video_router
 
 
 class ErrorMessage(BaseModel):

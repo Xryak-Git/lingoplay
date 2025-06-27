@@ -1,7 +1,7 @@
 from src import config
 from src.repository import S3Repository
-from src.videos.repository import VideoRepository
-from src.videos.service import VideoService
+from src.uploads.repository import VideoRepository
+from src.uploads.service import VideoService
 
 
 def video_service():

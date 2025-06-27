@@ -4,10 +4,10 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, s
 from fastapi.responses import JSONResponse
 
 from src.auth.dependencies import CurrentUser
-from src.videos.dependencies import video_service
-from src.videos.errors import VideoAlreadyUploadedError
-from src.videos.schemas import VideoCreate
-from src.videos.service import VideoService
+from src.uploads.dependencies import video_service
+from src.uploads.errors import VideoAlreadyUploadedError
+from src.uploads.schemas import VideoCreate
+from src.uploads.service import VideoService
 
 router = APIRouter()
 

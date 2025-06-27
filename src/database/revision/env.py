@@ -9,8 +9,8 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 from src.auth.models import UserTokens
 from src.config import PG_DATABASE_URI
 from src.database.core import Base
+from src.uploads.models import Games, Videos
 from src.users.models import LingoplayUser
-from src.videos.models import Games, Videos
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
