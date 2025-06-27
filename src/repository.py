@@ -148,7 +148,7 @@ class AlchemyRepository(AbstractRepository):
         return None
 
 
-class S3Repository(AbstractRepository):
+class S3Repository:
     def __init__(self, access_key: str, secret_key: str, endpoint_url: str, bucket_name: str):
         self.config = {
             "aws_access_key_id": access_key,
@@ -159,56 +159,31 @@ class S3Repository(AbstractRepository):
         self.session = get_session()
 
     @asynccontextmanager
-    async def get_client(self) -> AsyncGenerator[S3Client, None]:
+    async def _get_client(self) -> AsyncGenerator[S3Client, None]:
         async with self.session.create_client("s3", **self.config) as client:
             yield client
 
-    async def get_by(self, key: str):
-        async with self.get_client() as client:
+    async def get_file(self, key: str):
+        async with self._get_client() as client:
             response = await client.get_object(Bucket=self.bucket_name, Key=key)
             return await response["Body"].read()
 
-    async def get_by_or(self, key: str):
-        try:
-            return await self.get_by(key)
-        except ClientError as e:
-            if e.response["Error"]["Code"] == "NoSuchKey":
-                return None
-            raise
-
     async def get_all(self):
-        async with self.get_client() as client:
+        async with self._get_client() as client:
             response = await client.list_objects_v2(Bucket=self.bucket_name)
-            print(response)
             return [item["Key"] for item in response.get("Contents", [])]
 
-    async def create_one(self, key: str, file_obj):
-        await self.upload_file(file_obj, key)
-
-    async def update_or_create(self, key: str, file_obj):
-        await self.upload_file(file_obj, key)
-
-    async def update_by(self, key: str, file_obj):
-        await self.upload_file(file_obj, key)
-
-    async def upload_file(self, file_obj, object_name: str):
+    async def upload_file(self, file_obj, object_name: str) -> str:
         try:
-            async with self.get_client() as client:
+            async with self._get_client() as client:
                 await client.put_object(Bucket=self.bucket_name, Key=object_name, Body=file_obj)
+            return f"{self.config['endpoint_url'].rstrip('/')}/{self.bucket_name}/{object_name}"
         except ClientError as e:
             print(f"Error uploading file: {e}")
 
     async def delete_file(self, object_name: str):
         try:
-            async with self.get_client() as client:
+            async with self._get_client() as client:
                 await client.delete_object(Bucket=self.bucket_name, Key=object_name)
         except ClientError as e:
             print(f"Error deleting file: {e}")
-
-    async def get_file(self, object_name: str, destination_path: str):
-        try:
-            data = await self.get_by(object_name)
-            with open(destination_path, "wb") as f:
-                f.write(data)
-        except ClientError as e:
-            print(f"Error downloading file: {e}")
