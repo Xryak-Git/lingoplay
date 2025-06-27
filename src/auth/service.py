@@ -59,7 +59,6 @@ class AuthService:
             raise HTTPException(status_code=401, detail="User not authorized") from None
 
         user = await self._users_rep.get_by(id=user_data.get("id"))
-        print(user, "user")
         access_token, refresh_token = await self.generate_tokens(user)
 
         await self.save_token(user.id, refresh_token)
@@ -72,7 +71,6 @@ class AuthService:
     async def _validate_token(self, token: str, key: str):
         try:
             user_data = jwt.decode(token, key, algorithms=["HS256"])
-            print(user_data, "user_data")
             return user_data
         except jwt.ExpiredSignatureError:
             raise HTTPException(status_code=401, detail="Token expired") from None
