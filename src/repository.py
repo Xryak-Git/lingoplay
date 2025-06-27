@@ -39,7 +39,7 @@ class AbstractRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    async def exsists():
+    async def exists():
         raise NotImplementedError
 
 
