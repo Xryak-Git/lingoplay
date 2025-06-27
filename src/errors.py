@@ -20,3 +20,10 @@ class DatabaseCommitError(RepositoryError):
 class RecordNotFound(RepositoryError):
     def __init__(self, model_name: str):
         super().__init__(f"{model_name} not found.")
+
+
+class AlreadyExistsError(Exception):
+    def __init__(self, model, field: str, value: str):
+        self.field = field
+        self.value = value
+        super().__init__(f"{model} with {field}='{value}' already exists.")
