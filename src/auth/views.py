@@ -22,7 +22,7 @@ async def login(
     user = await user_service.get_by_email(email=user_login.email)
     if not user:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
+            status_code=status.HTTP_401_UNAUTHORIZED,
             detail=[{"msg": "A user with this email does not exist."}],
         )
 
