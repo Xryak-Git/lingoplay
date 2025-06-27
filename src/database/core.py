@@ -6,7 +6,7 @@ from sqlalchemy import MetaData
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, declared_attr
 
-from src.config import PG_DATABASE_URI
+from src.config import IS_TESTING, PG_DATABASE_URI
 
 engine = create_async_engine(PG_DATABASE_URI, echo=True)
 
@@ -29,7 +29,7 @@ def resolve_table_name(name):
 
 class Base(DeclarativeBase):
     """Base class for all SQLAlchemy models."""
-    metadata = MetaData(schema="public")
+    metadata = MetaData(schema="public" if not IS_TESTING else None)
 
     @declared_attr.directive
     def __tablename__(cls):

@@ -47,3 +47,5 @@ known-first-party = ["lingoplay"]
 combine-as-imports = true
 force-wrap-aliases = true
 
+[tool.pytest.ini_options]
+pythonpath = "src"
