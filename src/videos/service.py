@@ -1,4 +1,6 @@
+from src.errors import AlreadyExistsError
 from src.repository import AbstractRepository
+from src.videos.errors import VideoAlreadyUploadedError
 from src.videos.schemas import VideoCreate
 
 
@@ -10,4 +12,7 @@ class VideoService:
         self,
         data: VideoCreate,
     ):
-        return await self._repository.create_one(data)
+        try:
+            return await self._repository.create_one(data)
+        except AlreadyExistsError as e:
+            raise VideoAlreadyUploadedError(data.title) from e
