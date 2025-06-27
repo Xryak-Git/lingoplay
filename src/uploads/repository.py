@@ -1,8 +1,8 @@
 from pathlib import Path
 
 from sqlalchemy import exists, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.database.core import new_session
 from src.errors import AlreadyExistsError
 from src.repository import AlchemyRepository, S3Repository
 from src.uploads.models import Games, Videos
@@ -13,7 +13,8 @@ class VideoRepository(AlchemyRepository):
     model = Videos
     _dir_name = "videos"
 
-    def __init__(self, s3_repository: S3Repository):
+    def __init__(self, session: AsyncSession, s3_repository: S3Repository):
+        super().__init__(session)
         self._s3_repository = s3_repository
 
     async def create_one(self, data: VideoCreate) -> Videos:
@@ -23,7 +24,8 @@ class VideoRepository(AlchemyRepository):
             raise AlreadyExistsError(self.model.__tablename__, "path", path)
 
         url = await self._s3_repository.upload_file(data.file.file, path)
-        async with new_session() as session:
+
+        async with self._session as session:
             result = await session.execute(select(Games).where(Games.id.in_(data.game_ids)))
             games = result.scalars().all()
 
@@ -34,7 +36,8 @@ class VideoRepository(AlchemyRepository):
             return video
 
     async def exists(self, path: str):
-        async with new_session() as session:
+        async with self._session as session:
             stmt = select(exists().where(Videos.path.like(f"%{path}")))
             result = await session.execute(stmt)
             return result.scalar()
+

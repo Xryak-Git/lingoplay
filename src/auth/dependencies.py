@@ -3,11 +3,13 @@ from typing import Annotated
 import jwt
 from fastapi import Depends, HTTPException, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from src import config
 from src.auth.repository import AuthRepository
 from src.auth.service import AuthService
+from src.database.core import get_session
 from src.users.dependencies import user_service
 from src.users.models import LingoplayUser
 from src.users.repository import UserRepository
@@ -27,8 +29,8 @@ class CustomHTTPBearer(HTTPBearer):
 security = CustomHTTPBearer()
 
 
-def auth_service():
-    return AuthService(AuthRepository(), UserRepository())
+async def auth_service(session: Annotated[AsyncSession, Depends(get_session)]):
+    return AuthService(AuthRepository(session), UserRepository(session))
 
 
 async def get_current_user(

@@ -9,8 +9,9 @@ from sqlalchemy import and_, delete, exists, insert, or_, select, update
 from sqlalchemy.exc import IntegrityError
 from types_aiobotocore_s3.client import S3Client
 
-from src.database.core import new_session
+from src.database.core import get_session as new_session
 from src.errors import DatabaseCommitError, UniqueConstraintViolation
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 class AbstractRepository(ABC):
@@ -46,15 +47,17 @@ class AbstractRepository(ABC):
 class AlchemyRepository(AbstractRepository):
     model = None
 
+    def __init__(self, session: AsyncSession):
+        self._session = session
+
     async def get_all(self):
-        async with new_session() as session:
+        async with self._session as session:
             stmt = select(self.model)
             res = await session.execute(stmt)
-            res = [row[0].dict() for row in res.all()]
-            return res
+            return [row[0].dict() for row in res.all()]
 
     async def create_one(self, data: dict):
-        async with new_session() as session:
+        async with self._session as session:
             try:
                 stmt = insert(self.model).values(**data).returning(self.model)
                 res = await session.execute(stmt)
@@ -71,14 +74,14 @@ class AlchemyRepository(AbstractRepository):
                 raise DatabaseCommitError() from e
 
     async def get_by(self, **kwargs):
-        async with new_session() as session:
+        async with self._session as session:
             conditions = [getattr(self.model, key) == value for key, value in kwargs.items()]
             stmt = select(self.model).where(and_(*conditions))
             result = await session.execute(stmt)
             return result.scalar_one_or_none()
 
     async def update_by(self, filters: dict, values: dict) -> int:
-        async with new_session() as session:
+        async with self._session as session:
             conditions = [getattr(self.model, key) == value for key, value in filters.items()]
             stmt = update(self.model).where(and_(*conditions)).values(**values)
             result = await session.execute(stmt)
@@ -86,14 +89,7 @@ class AlchemyRepository(AbstractRepository):
             return result.rowcount
 
     async def update_or_create(self, filters: dict, values: dict):
-        """
-        Обновляет объект, если найден. Иначе — создаёт новый.
-
-        :param filters: условия поиска (например, {"email": "user@example.com"})
-        :param values: данные для обновления или создания
-        :return: (объект, created: bool)
-        """
-        async with new_session() as session:
+        async with self._session as session:
             instance = await self.get_by(**filters)
 
             conditions = [getattr(self.model, key) == value for key, value in filters.items()]
@@ -118,7 +114,7 @@ class AlchemyRepository(AbstractRepository):
                 return instance, False
 
     async def delete_by(self, **kwargs) -> int:
-        async with new_session() as session:
+        async with self._session as session:
             conditions = [getattr(self.model, key) == value for key, value in kwargs.items()]
             stmt = delete(self.model).where(and_(*conditions))
             result = await session.execute(stmt)
@@ -126,17 +122,13 @@ class AlchemyRepository(AbstractRepository):
             return result.rowcount
 
     async def get_by_or(self, **kwargs):
-        async with new_session() as session:
+        async with self._session as session:
             conditions = [getattr(self.model, key) == value for key, value in kwargs.items()]
             stmt = select(self.model).where(or_(*conditions))
             result = await session.execute(stmt)
             return result.scalar_one_or_none()
 
     def _extract_unique_field_from_message(self, message: str) -> str | None:
-        """
-        Универсальный парсер поля из UNIQUE ошибки для SQLite/PostgreSQL/MySQL.
-        Возвращает имя поля, если удалось извлечь, иначе None.
-        """
         match = re.search(r"UNIQUE constraint failed: [\w_]+\.(\w+)", message)
         if match:
             return match.group(1)
@@ -152,7 +144,7 @@ class AlchemyRepository(AbstractRepository):
         return None
 
     async def exists(self, **kwargs) -> bool:
-        async with new_session() as session:
+        async with self._session as session:
             conditions = [getattr(self.model, key) == value for key, value in kwargs.items()]
             stmt = select(exists().where(and_(*conditions)))
             result = await session.execute(stmt)
