@@ -2,16 +2,18 @@ import re
 from abc import ABC, abstractmethod
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
+from typing import Annotated
 
 from aiobotocore.session import get_session
 from botocore.exceptions import ClientError
+from fastapi import Depends
 from sqlalchemy import and_, delete, exists, insert, or_, select, update
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.ext.asyncio import AsyncSession
 from types_aiobotocore_s3.client import S3Client
 
-from src.database.core import get_session as new_session
+from src import config
 from src.errors import DatabaseCommitError, UniqueConstraintViolation
-from sqlalchemy.ext.asyncio import AsyncSession
 
 
 class AbstractRepository(ABC):
@@ -42,6 +44,32 @@ class AbstractRepository(ABC):
     @abstractmethod
     async def exists():
         raise NotImplementedError
+
+
+class AbstractS3Repository(ABC):
+    @abstractmethod
+    async def get_file():
+        raise NotImplementedError
+
+    @abstractmethod
+    async def upload_file():
+        raise NotImplementedError
+
+    @abstractmethod
+    async def delete_file():
+        raise NotImplementedError
+
+
+async def get_s3_repo():
+    yield S3Repository(
+        access_key=config.S3_ACCESS_KEY,
+        secret_key=config.S3_SECRET_KEY,
+        endpoint_url=config.S3_ENDPOINT_URL,
+        bucket_name=config.S3_BUCKET_NAME,
+    )
+
+
+S3Repo = Annotated[AbstractS3Repository, Depends(get_s3_repo)]
 
 
 class AlchemyRepository(AbstractRepository):
@@ -151,7 +179,7 @@ class AlchemyRepository(AbstractRepository):
             return result.scalar()
 
 
-class S3Repository:
+class S3Repository(AbstractS3Repository):
     def __init__(self, access_key: str, secret_key: str, endpoint_url: str, bucket_name: str):
         self.config = {
             "aws_access_key_id": access_key,

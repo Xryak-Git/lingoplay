@@ -4,7 +4,7 @@ from sqlalchemy import exists, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.errors import AlreadyExistsError
-from src.repository import AlchemyRepository, S3Repository
+from src.repository import AbstractS3Repository, AlchemyRepository
 from src.uploads.models import Games, Videos
 from src.uploads.schemas import VideoCreate
 
@@ -13,7 +13,7 @@ class VideoRepository(AlchemyRepository):
     model = Videos
     _dir_name = "videos"
 
-    def __init__(self, session: AsyncSession, s3_repository: S3Repository):
+    def __init__(self, session: AsyncSession, s3_repository: AbstractS3Repository):
         super().__init__(session)
         self._s3_repository = s3_repository
 
