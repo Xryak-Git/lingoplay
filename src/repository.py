@@ -101,6 +101,7 @@ class AlchemyRepository(AbstractRepository):
 
                 raise DatabaseCommitError() from e
 
+    # TODO: Переписать на filter
     async def get_by(self, **kwargs):
         async with self._session as session:
             conditions = [getattr(self.model, key) == value for key, value in kwargs.items()]

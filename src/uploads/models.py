@@ -8,19 +8,17 @@ from src.users.models import LingoplayUser
 
 class Games(Base):
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
-    title: Mapped[str] = mapped_column(index=True)
+    title: Mapped[str] = mapped_column()
 
     videos: Mapped[set["Videos"]] = relationship(secondary=videos_games_association, back_populates="games")
 
 
+# back_populates испльзовать
 class Videos(Base):
-
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     title: Mapped[str] = mapped_column(index=True)
     path: Mapped[str] = mapped_column(unique=True)
 
     user_id: Mapped[int] = mapped_column(ForeignKey("lingoplay_user.id"))
-    user: Mapped["LingoplayUser"] = relationship(back_populates="videos", uselist=False)
-
+    user: Mapped["LingoplayUser"] = relationship(back_populates="videos")
     games: Mapped[set["Games"]] = relationship(secondary=videos_games_association, back_populates="videos")
-
