@@ -2,7 +2,7 @@ import pytest
 from httpx import AsyncClient
 
 from src.users.schemas import UserLogin
-from tests.conftest import TEST_USER_EMAIL, TEST_USER_PASSWORD
+from tests.constants import TEST_USER_EMAIL, TEST_USER_PASSWORD
 
 
 class TestAuthRoutes:
@@ -48,7 +48,6 @@ class TestAuthRoutes:
         register_response = await client.post("/auth/registrate", json=user_data)
 
         assert register_response.status_code == 409, register_response.text
-
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(

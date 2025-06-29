@@ -6,7 +6,7 @@ from httpx import AsyncClient
 from src.repository import AbstractS3Repository
 from src.uploads.models import Games
 from src.users.schemas import UserLogin
-from tests.conftest import TEST_USER_EMAIL, TEST_USER_PASSWORD
+from tests.constants import TEST_USER_EMAIL, TEST_USER_PASSWORD
 
 
 class TestUploadsRoutes:
@@ -30,12 +30,8 @@ class TestUploadsRoutes:
             "/videos/upload",
             headers=headers,
             files={"file": ("test_video.mp4", fake_video, "video/mp4")},
-            data={
-                "title": "TestVideo",
-                "game_ids": f"{existing_games.id}"
-            },
+            data={"title": "TestVideo", "game_ids": f"{existing_games.id}"},
         )
-
 
         assert response.status_code == 201, response.text
         assert response.json()["message"] == "Видео загружено и начало обрабатываться"
