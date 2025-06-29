@@ -7,7 +7,7 @@ from typing import Annotated
 from aiobotocore.session import get_session
 from botocore.exceptions import ClientError
 from fastapi import Depends
-from sqlalchemy import and_, delete, exists, insert, or_, select, update
+from sqlalchemy import delete, exists, insert, or_, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from types_aiobotocore_s3.client import S3Client
@@ -101,18 +101,15 @@ class AlchemyRepository(AbstractRepository):
 
                 raise DatabaseCommitError() from e
 
-    # TODO: Переписать на filter
     async def get_by(self, **kwargs):
         async with self._session as session:
-            conditions = [getattr(self.model, key) == value for key, value in kwargs.items()]
-            stmt = select(self.model).where(and_(*conditions))
-            result = await session.execute(stmt)
+            query = select(self.model).filter_by(**kwargs)
+            result = await session.execute(query)
             return result.scalar_one_or_none()
 
-    async def update_by(self, filters: dict, values: dict) -> int:
+    async def update_by(self, **kwargs) -> int:
         async with self._session as session:
-            conditions = [getattr(self.model, key) == value for key, value in filters.items()]
-            stmt = update(self.model).where(and_(*conditions)).values(**values)
+            stmt = update(self.model).filter_by(**kwargs)
             result = await session.execute(stmt)
             await session.commit()
             return result.rowcount
@@ -121,9 +118,8 @@ class AlchemyRepository(AbstractRepository):
         async with self._session as session:
             instance = await self.get_by(**filters)
 
-            conditions = [getattr(self.model, key) == value for key, value in filters.items()]
             if instance:
-                stmt = update(self.model).where(and_(*conditions)).values(**values).returning(self.model)
+                stmt = update(self.model).filter_by(**filters).values(**values).returning(self.model)
                 result = await session.execute(stmt)
                 await session.commit()
                 updated_instance = result.scalar_one()
@@ -138,14 +134,13 @@ class AlchemyRepository(AbstractRepository):
                 return new_instance, True
             except IntegrityError:
                 await session.rollback()
-                result = await session.execute(select(self.model).where(and_(*conditions)))
+                result = await session.execute(select(self.model).filter_by(**filters))
                 instance = result.scalar_one()
                 return instance, False
 
     async def delete_by(self, **kwargs) -> int:
         async with self._session as session:
-            conditions = [getattr(self.model, key) == value for key, value in kwargs.items()]
-            stmt = delete(self.model).where(and_(*conditions))
+            stmt = delete(self.model).filter_by(**kwargs)
             result = await session.execute(stmt)
             await session.commit()
             return result.rowcount
@@ -156,6 +151,12 @@ class AlchemyRepository(AbstractRepository):
             stmt = select(self.model).where(or_(*conditions))
             result = await session.execute(stmt)
             return result.scalar_one_or_none()
+
+    async def exists(self, **kwargs) -> bool:
+        async with self._session as session:
+            stmt = select(exists().filer_by(**kwargs))
+            result = await session.execute(stmt)
+            return result.scalar()
 
     def _extract_unique_field_from_message(self, message: str) -> str | None:
         match = re.search(r"UNIQUE constraint failed: [\w_]+\.(\w+)", message)
@@ -171,13 +172,6 @@ class AlchemyRepository(AbstractRepository):
             return match.group(1)
 
         return None
-
-    async def exists(self, **kwargs) -> bool:
-        async with self._session as session:
-            conditions = [getattr(self.model, key) == value for key, value in kwargs.items()]
-            stmt = select(exists().where(and_(*conditions)))
-            result = await session.execute(stmt)
-            return result.scalar()
 
 
 class S3Repository(AbstractS3Repository):
