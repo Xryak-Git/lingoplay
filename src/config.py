@@ -1,9 +1,11 @@
 import os
+from pathlib import Path
 
 from dotenv import load_dotenv
 
 load_dotenv()
 
+ROOT_DIR = Path(__file__).resolve().parent.parent
 
 PG_USER: str = os.getenv("PG_USER")
 PG_PASSWORD: str = os.getenv("PG_PASSWORD")
