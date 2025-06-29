@@ -13,7 +13,7 @@ class TestUploadsRoutes:
     _test_user_email = "test@example.com"
 
     @pytest.mark.asyncio
-    async def test_video_upload(self, client: AsyncClient, existing_games: Games, s3_test_repo: AbstractS3Repository):
+    async def test_video_upload(self, client: AsyncClient, existing_game: Games, s3_test_repo: AbstractS3Repository):
         # Логины
         ul = UserLogin(email=TEST_USER_EMAIL, password=TEST_USER_PASSWORD)
         login_response = await client.post("/auth/login", json=ul.model_dump())
@@ -30,7 +30,7 @@ class TestUploadsRoutes:
             "/videos/upload",
             headers=headers,
             files={"file": ("test_video.mp4", fake_video, "video/mp4")},
-            data={"title": "TestVideo", "game_ids": f"{existing_games.id}"},
+            data={"title": "TestVideo", "game_id": f"{existing_game.id}"},
         )
 
         assert response.status_code == 201, response.text

@@ -16,12 +16,32 @@ router = APIRouter()
 async def upload_video(
     file: Annotated[UploadFile, File()],
     title: Annotated[str, Form()],
-    game_ids: Annotated[set[int], Form()],
+    game_id: Annotated[int, Form()],
     current_user: CurrentUser,
     video_service: Annotated[VideoService, Depends(video_service)],
 ) -> JSONResponse:
     """Creates new video and uploads to S3"""
-    data = VideoCreate(file=file, title=title, game_ids=game_ids, user_id=current_user.id)
+    data = VideoCreate(file=file, title=title, game_id=game_id, user_id=current_user.id)
+
+    try:
+        await video_service.add(data)
+        return JSONResponse(
+            status_code=status.HTTP_201_CREATED, content={"message": "Видео загружено и начало обрабатываться"}
+        )
+    except VideoAlreadyUploadedError as e:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=[{"msg": str(e)}]) from e
+
+
+@router.post("/games")
+async def add_game(
+    file: Annotated[UploadFile, File()],
+    title: Annotated[str, Form()],
+    game_id: Annotated[int, Form()],
+    current_user: CurrentUser,
+    video_service: Annotated[VideoService, Depends(video_service)],
+) -> JSONResponse:
+    """Creates new video and uploads to S3"""
+    data = VideoCreate(file=file, title=title, game_id=game_id, user_id=current_user.id)
 
     try:
         await video_service.add(data)

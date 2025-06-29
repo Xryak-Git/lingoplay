@@ -26,10 +26,10 @@ class VideoRepository(AlchemyRepository):
         url = await self._s3_repository.upload_file(data.file.file, path)
 
         async with self._session as session:
-            result = await session.execute(select(Games).where(Games.id.in_(data.game_ids)))
-            games = result.scalars().all()
+            result = await session.execute(select(Games).where(Games.id==data.game_id))
+            game = result.scalars().one()
 
-            video = Videos(user_id=data.user_id, path=url, title=data.title, games=set(games))
+            video = Videos(user_id=data.user_id, path=url, title=data.title, game=game)
             session.add(video)
             await session.commit()
             await session.refresh(video)
@@ -40,4 +40,3 @@ class VideoRepository(AlchemyRepository):
             stmt = select(exists().where(Videos.path.like(f"%{path}")))
             result = await session.execute(stmt)
             return result.scalar()
-

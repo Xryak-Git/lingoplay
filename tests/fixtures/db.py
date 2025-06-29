@@ -33,7 +33,7 @@ async def exsisting_user(prepare_test_db) -> AsyncGenerator[LingoplayUser, None]
 
 
 @pytest_asyncio.fixture(scope="session", autouse=True)
-async def existing_games(prepare_test_db) -> AsyncGenerator[Games, None]:
+async def existing_game(prepare_test_db) -> AsyncGenerator[Games, None]:
     """Создаёт тестовыую игру всеми тестами"""
     async for session in override_get_session():
         game = Games(title="kek")

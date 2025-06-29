@@ -6,9 +6,14 @@ class VideoCreate(BaseModel):
     user_id: int
     file: UploadFile
     title: str
-    game_ids: set[int]
+    game_id: int
+
 
 class VideoWriteDb(BaseModel):
     user_id: int
     path: str
+    title: str
+
+
+class GameCreate(BaseModel):
     title: str
