@@ -11,3 +11,6 @@ from src.uploads.service import UploadsService
 
 async def uploads_service(session: Annotated[AsyncSession, Depends(get_session)], s3_repository: S3Repo):
     return UploadsService(videos_repo=VideoRepository(session, s3_repository), games_repo=GamesRepository(session))
+
+
+UploadsServ = Annotated[UploadsService, Depends(uploads_service)]

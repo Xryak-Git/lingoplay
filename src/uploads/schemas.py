@@ -17,3 +17,7 @@ class VideoWriteDb(BaseModel):
 
 class GameCreate(BaseModel):
     title: str
+
+
+class GameGet(GameCreate):
+    id: int

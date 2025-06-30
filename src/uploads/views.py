@@ -1,13 +1,12 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
+from fastapi import APIRouter, File, Form, HTTPException, UploadFile, status
 from fastapi.responses import JSONResponse
 
 from src.auth.dependencies import CurrentUser
-from src.uploads.dependencies import uploads_service
+from src.uploads.dependencies import UploadsServ
 from src.uploads.errors import VideoAlreadyUploadedError
-from src.uploads.schemas import VideoCreate
-from src.uploads.service import UploadsService
+from src.uploads.schemas import GameCreate, GameGet, VideoCreate
 
 router = APIRouter()
 
@@ -18,7 +17,7 @@ async def upload_video(
     title: Annotated[str, Form()],
     game_id: Annotated[int, Form()],
     current_user: CurrentUser,
-    uploads_serivce: Annotated[UploadsService, Depends(uploads_service)],
+    uploads_serivce: UploadsServ,
 ) -> JSONResponse:
     """Creates new video and uploads to S3"""
     data = VideoCreate(file=file, title=title, game_id=game_id, user_id=current_user.id)
@@ -31,3 +30,13 @@ async def upload_video(
     except VideoAlreadyUploadedError as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=[{"msg": str(e)}]) from e
 
+
+@router.post("/games", status_code=201)
+async def add_game(
+    game_create: GameCreate,
+    current_user: CurrentUser,
+    uploads_serivce: UploadsServ,
+) -> GameGet:
+    """Adds new game users game"""
+
+    return await uploads_serivce.add_game(current_user, game_create)

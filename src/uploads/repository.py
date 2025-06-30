@@ -6,7 +6,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.errors import AlreadyExistsError
 from src.repository import AbstractS3Repository, AlchemyRepository
 from src.uploads.models import Games, Videos
-from src.uploads.schemas import VideoCreate
+from src.uploads.schemas import GameCreate, VideoCreate
+from src.users.models import LingoplayUsers
 
 
 class VideoRepository(AlchemyRepository):
@@ -44,3 +45,8 @@ class VideoRepository(AlchemyRepository):
 
 class GamesRepository(AlchemyRepository):
     model = Games
+
+    async def create_one(self, user: LingoplayUsers, game_data: GameCreate):
+        game = Games(title=game_data.title)
+        game.users.append(user)
+        return await super().create_one(game)
