@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 
 from src.database.core import Base
 from src.uploads.models import Games
-from src.users.models import LingoplayUser
+from src.users.models import LingoplayUsers
 from src.users.schemas import UserCreate
 from tests.constants import TEST_DB_URI, TEST_USER_EMAIL, TEST_USER_PASSWORD, TEST_USERNAME
 
@@ -20,11 +20,11 @@ async def override_get_session() -> AsyncGenerator[AsyncSession, None]:
 
 
 @pytest_asyncio.fixture(scope="session", autouse=True)
-async def exsisting_user(prepare_test_db) -> AsyncGenerator[LingoplayUser, None]:
+async def exsisting_user(prepare_test_db) -> AsyncGenerator[LingoplayUsers, None]:
     """Создаёт тестового пользователя перед всеми тестами"""
     async for session in override_get_session():
         user_create = UserCreate(email=TEST_USER_EMAIL, username=TEST_USERNAME, password=TEST_USER_PASSWORD)
-        user = LingoplayUser(email=user_create.email, username=user_create.username, password=user_create.password)
+        user = LingoplayUsers(email=user_create.email, username=user_create.username, password=user_create.password)
         session.add(user)
         await session.commit()
         await session.refresh(user)

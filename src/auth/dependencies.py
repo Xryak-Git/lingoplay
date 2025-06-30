@@ -11,7 +11,7 @@ from src.auth.repository import AuthRepository
 from src.auth.service import AuthService
 from src.database.core import get_session
 from src.users.dependencies import user_service
-from src.users.models import LingoplayUser
+from src.users.models import LingoplayUsers
 from src.users.repository import UserRepository
 from src.users.service import UsersService
 
@@ -36,7 +36,7 @@ async def auth_service(session: Annotated[AsyncSession, Depends(get_session)]):
 async def get_current_user(
     user_service: Annotated[UsersService, Depends(user_service)],
     credentials: Annotated[HTTPAuthorizationCredentials, Depends(security)],
-) -> LingoplayUser:
+) -> LingoplayUsers:
     token = credentials.credentials
     try:
         payload = jwt.decode(token, config.JWT_SECRET_KEY, algorithms=["HS256"])
@@ -47,4 +47,4 @@ async def get_current_user(
         raise HTTPException(status_code=401, detail="Invalid token") from None
 
 
-CurrentUser = Annotated[LingoplayUser, Depends(get_current_user)]
+CurrentUser = Annotated[LingoplayUsers, Depends(get_current_user)]

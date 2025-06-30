@@ -1,7 +1,7 @@
 from src.errors import UniqueConstraintViolation
 from src.repository import AbstractRepository
 from src.users.errors import UserAlreadyExistsError
-from src.users.models import LingoplayUser
+from src.users.models import LingoplayUsers
 from src.users.schemas import UserCreate
 
 
@@ -9,7 +9,7 @@ class UsersService:
     def __init__(self, repository: AbstractRepository):
         self._repository = repository
 
-    async def add(self, user: UserCreate) -> LingoplayUser:
+    async def add(self, user: UserCreate) -> LingoplayUsers:
         user_dict = user.model_dump()
 
         try:
@@ -19,15 +19,15 @@ class UsersService:
 
         return user
 
-    async def get(self, user_id: int) -> LingoplayUser | None:
+    async def get(self, user_id: int) -> LingoplayUsers | None:
         user = await self._repository.get_by(id=user_id)
         return user
 
-    async def get_by_email(self, email: str) -> LingoplayUser | None:
+    async def get_by_email(self, email: str) -> LingoplayUsers | None:
         user = await self._repository.get_by(email=email)
         return user
 
-    async def get_by_username(self, username: str) -> LingoplayUser | None:
+    async def get_by_username(self, username: str) -> LingoplayUsers | None:
         user = await self._repository.get_by(username=username)
         return user
 

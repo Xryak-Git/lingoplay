@@ -6,7 +6,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from src.database.core import Base
 
 if TYPE_CHECKING:
-    from src.users.models import LingoplayUser
+    from src.users.models import LingoplayUsers
 
 
 class UserTokens(Base):
@@ -14,8 +14,7 @@ class UserTokens(Base):
     refresh_token: Mapped[str] = mapped_column(unique=True, index=True)
 
     user_id: Mapped[int] = mapped_column(
-        ForeignKey("lingoplay_user.id"),
+        ForeignKey("lingoplay_users.id", ondelete="CASCADE"),
         unique=True,
     )
-
-    user: Mapped["LingoplayUser"] = relationship(back_populates="token", uselist=False)
+    user: Mapped["LingoplayUsers"] = relationship(back_populates="token", uselist=False)

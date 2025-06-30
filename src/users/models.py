@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from src.uploads.models import Videos
 
 
-class LingoplayUser(Base):
+class LingoplayUsers(Base):
     id: Mapped[PrimaryKey]
     email: Mapped[str] = mapped_column(unique=True, index=True)
     username: Mapped[str] = mapped_column(unique=True)
@@ -24,7 +24,7 @@ class LingoplayUser(Base):
         cascade="all, delete-orphan",
     )
 
-    videos: Mapped[list["Videos"]] = relationship(back_populates="user")
+    videos: Mapped[list["Videos"]] = relationship(back_populates="user", cascade="all, delete-orphan")
 
     def verify_password(self, password: str) -> bool:
         if not password or not self.password:

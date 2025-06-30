@@ -9,7 +9,7 @@ from src import config
 from src.auth.models import UserTokens
 from src.repository import AlchemyRepository
 from src.users.models import (
-    LingoplayUser,
+    LingoplayUsers,
 )
 
 
@@ -18,7 +18,7 @@ class AuthService:
         self._tokens_rep = tokens_rep
         self._users_rep = users_rep
 
-    async def generate_tokens(self, user: LingoplayUser):
+    async def generate_tokens(self, user: LingoplayUsers):
         now = datetime.now(timezone(timedelta(hours=3)))
         jwt_timedelta = timedelta(minutes=config.JWT_ACCESS_TOKEN_EXPIRES_MINUTES)
         refresh_timedelta = timedelta(minutes=config.JWT_REFRESH_TOKEN_EXPIRES_MINUTES)
@@ -51,7 +51,7 @@ class AuthService:
     async def validate_access_token(self, token: str) -> dict:
         return await self._validate_token(token, config.JWT_SECRET_KEY)
 
-    async def refresh_tokens(self, refresh_token: str) -> tuple[str, str, LingoplayUser]:
+    async def refresh_tokens(self, refresh_token: str) -> tuple[str, str, LingoplayUsers]:
         user_data = await self.validate_refresh_token(refresh_token)
 
         db_token = await self._tokens_rep.get_by(refresh_token=refresh_token)
