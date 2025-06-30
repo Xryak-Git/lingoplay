@@ -5,6 +5,7 @@ from httpx import AsyncClient
 
 from src.repository import AbstractS3Repository
 from src.uploads.models import Games
+from src.uploads.schemas import GameCreate
 from src.users.schemas import UserLogin
 from tests.constants import TEST_USER_EMAIL, TEST_USER_PASSWORD
 
@@ -36,3 +37,23 @@ class TestUploadsRoutes:
         assert response.status_code == 201, response.text
         assert response.json()["message"] == "Видео загружено и начало обрабатываться"
         assert await s3_test_repo.get_file() == fake_video.getvalue()
+
+    @pytest.mark.asyncio
+    async def test_add_game(self, client: AsyncClient):
+        ul = UserLogin(email=TEST_USER_EMAIL, password=TEST_USER_PASSWORD)
+        login_response = await client.post("/auth/login", json=ul.model_dump())
+        assert login_response.status_code == 200, login_response.text
+
+        token = login_response.json()["token"]
+        headers = {"Authorization": f"Bearer {token}"}
+
+        test_game = GameCreate(title="Persona 5 Royal")
+
+        response = await client.post(
+            "/videos/games",
+            headers=headers,
+            json=test_game.model_dump(),
+        )
+
+        assert response.status_code == 201, response.text
+
