@@ -9,7 +9,7 @@ from src.models import PrimaryKey
 
 if TYPE_CHECKING:
     from src.auth.models import UserTokens
-    from src.uploads.models import Videos
+    from src.uploads.models import Games, Videos
 
 
 class LingoplayUsers(Base):
@@ -25,6 +25,8 @@ class LingoplayUsers(Base):
     )
 
     videos: Mapped[list["Videos"]] = relationship(back_populates="user", cascade="all, delete-orphan")
+    games: Mapped[list["Games"]] = relationship(back_populates="users", secondary="lingoplay_users_games")
+
 
     def verify_password(self, password: str) -> bool:
         if not password or not self.password:
