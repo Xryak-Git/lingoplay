@@ -2,7 +2,8 @@ import re
 from abc import ABC, abstractmethod
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from typing import Annotated
+from functools import wraps
+from typing import Annotated, overload
 
 from aiobotocore.session import get_session
 from botocore.exceptions import ClientError
@@ -13,6 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from types_aiobotocore_s3.client import S3Client
 
 from src import config
+from src.database.core import Base
 from src.errors import DatabaseCommitError, UniqueConstraintViolation
 
 
@@ -72,6 +74,31 @@ async def get_s3_repo():
 S3Repo = Annotated[AbstractS3Repository, Depends(get_s3_repo)]
 
 
+def handle_integrity_errors(method):
+    @wraps(method)
+    async def wrapper(self, *args, **kwargs):
+        async with self._session as session:
+            try:
+                return await method(self, session, *args, **kwargs)
+            except IntegrityError as e:
+                await session.rollback()
+                error_message = str(e.orig)
+
+                field_name = self._extract_unique_field_from_message(error_message)
+                if field_name:
+                    source = args[0] if args else kwargs
+                    if isinstance(source, dict):
+                        value = source.get(field_name, "???")
+                    else:
+                        value = getattr(source, field_name, "???")
+
+                    raise UniqueConstraintViolation(field_name, value) from e
+
+                raise DatabaseCommitError() from e
+
+    return wrapper
+
+
 class AlchemyRepository(AbstractRepository):
     model = None
 
@@ -84,22 +111,24 @@ class AlchemyRepository(AbstractRepository):
             res = await session.execute(stmt)
             return [row[0].dict() for row in res.all()]
 
-    async def create_one(self, data: dict):
-        async with self._session as session:
-            try:
-                stmt = insert(self.model).values(**data).returning(self.model)
-                res = await session.execute(stmt)
-                await session.commit()
-                return res.scalar_one()
-            except IntegrityError as e:
-                await session.rollback()
-                error_message = str(e.orig)
+    @overload
+    async def create_one(self, session: AsyncSession, data: dict) -> Base: ...
 
-                field_name = self._extract_unique_field_from_message(error_message)
-                if field_name:
-                    raise UniqueConstraintViolation(field_name, data.get(field_name, "???")) from e
+    @overload
+    async def create_one(self, session: AsyncSession, instance: Base) -> Base: ...
 
-                raise DatabaseCommitError() from e
+    @handle_integrity_errors
+    async def create_one(self, session: AsyncSession, data_or_instance: dict | Base):
+        if isinstance(data_or_instance, dict):
+            stmt = insert(self.model).values(**data_or_instance).returning(self.model)
+            res = await session.execute(stmt)
+            await session.commit()
+            return res.scalar_one()
+        else:
+            session.add(data_or_instance)
+            await session.commit()
+            await session.refresh(data_or_instance)
+            return data_or_instance
 
     async def get_by(self, **kwargs):
         async with self._session as session:
