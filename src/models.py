@@ -1,5 +1,5 @@
 from typing import Annotated
 
-from pydantic import Field
+from sqlalchemy.orm import mapped_column
 
-PrimaryKey = Annotated[int, Field(gt=0, lt=2147483647)]
+PrimaryKey = Annotated[int, mapped_column(primary_key=True)]

@@ -2,18 +2,19 @@ from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.database.core import Base
+from src.models import PrimaryKey
 from src.users.models import LingoplayUser
 
 
 class Games(Base):
-    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    id: Mapped[PrimaryKey]
     title: Mapped[str] = mapped_column()
 
     videos: Mapped[list["Videos"]] = relationship(back_populates="game")
 
 
 class Videos(Base):
-    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    id: Mapped[PrimaryKey]
     title: Mapped[str] = mapped_column(index=True)
     path: Mapped[str] = mapped_column(unique=True)
 

@@ -5,6 +5,7 @@ from sqlalchemy import LargeBinary
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.database.core import Base
+from src.models import PrimaryKey
 
 if TYPE_CHECKING:
     from src.auth.models import UserTokens
@@ -12,7 +13,7 @@ if TYPE_CHECKING:
 
 
 class LingoplayUser(Base):
-    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    id: Mapped[PrimaryKey]
     email: Mapped[str] = mapped_column(unique=True, index=True)
     username: Mapped[str] = mapped_column(unique=True)
     password: Mapped[bytes] = mapped_column(LargeBinary)
