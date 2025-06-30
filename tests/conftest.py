@@ -10,6 +10,7 @@ from tests.fixtures.db import override_get_session
 pytest_plugins = [
     "tests.fixtures.db",
     "tests.fixtures.s3",
+    "tests.fixtures.auth",
 ]
 
 

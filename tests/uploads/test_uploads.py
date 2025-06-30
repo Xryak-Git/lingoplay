@@ -6,30 +6,21 @@ from httpx import AsyncClient
 from src.repository import AbstractS3Repository
 from src.uploads.models import Games
 from src.uploads.schemas import GameCreate
-from src.users.schemas import UserLogin
-from tests.constants import TEST_USER_EMAIL, TEST_USER_PASSWORD
 
 
 class TestUploadsRoutes:
-    _test_user_email = "test@example.com"
 
     @pytest.mark.asyncio
-    async def test_video_upload(self, client: AsyncClient, existing_game: Games, s3_test_repo: AbstractS3Repository):
-        # Логины
-        ul = UserLogin(email=TEST_USER_EMAIL, password=TEST_USER_PASSWORD)
-        login_response = await client.post("/auth/login", json=ul.model_dump())
-        assert login_response.status_code == 200, login_response.text
+    async def test_video_upload(
+        self, client: AsyncClient, existing_game: Games, s3_test_repo: AbstractS3Repository, logined_user_headers: dict
+    ):
 
-        token = login_response.json()["token"]
-        headers = {"Authorization": f"Bearer {token}"}
-
-        # Подготовка файла и данных формы
         fake_video = io.BytesIO(b"fake mp4 data")
         fake_video.name = "test_video.mp4"
 
         response = await client.post(
             "/videos/upload",
-            headers=headers,
+            headers=logined_user_headers,
             files={"file": ("test_video.mp4", fake_video, "video/mp4")},
             data={"title": "TestVideo", "game_id": f"{existing_game.id}"},
         )
@@ -39,21 +30,13 @@ class TestUploadsRoutes:
         assert await s3_test_repo.get_file() == fake_video.getvalue()
 
     @pytest.mark.asyncio
-    async def test_add_game(self, client: AsyncClient):
-        ul = UserLogin(email=TEST_USER_EMAIL, password=TEST_USER_PASSWORD)
-        login_response = await client.post("/auth/login", json=ul.model_dump())
-        assert login_response.status_code == 200, login_response.text
-
-        token = login_response.json()["token"]
-        headers = {"Authorization": f"Bearer {token}"}
-
+    async def test_add_game(self, client: AsyncClient, logined_user_headers: dict):
         test_game = GameCreate(title="Persona 5 Royal")
 
         response = await client.post(
             "/videos/games",
-            headers=headers,
+            headers=logined_user_headers,
             json=test_game.model_dump(),
         )
 
         assert response.status_code == 201, response.text
-
