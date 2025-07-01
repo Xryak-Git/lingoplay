@@ -2,6 +2,7 @@ from pathlib import Path
 
 from sqlalchemy import exists, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from src.errors import AlreadyExistsError
 from src.repository import AbstractS3Repository, AlchemyRepository
@@ -50,3 +51,17 @@ class GamesRepository(AlchemyRepository):
         game = Games(title=game_data.title)
         game.users.append(user)
         return await super().create_one(game)
+
+    async def filter(self, user_id: int | None = None, title: str | None = None) -> list[Games]:
+        async with self._session as session:
+            query = select(self.model).options(selectinload(Games.users))
+
+            if user_id:
+                query = query.join(Games.users).where(LingoplayUsers.id == user_id)
+
+            if title:
+                query = query.where(Games.title.ilike(f"%{title}%"))
+
+            res = await session.execute(query)
+
+            return res.scalars().all()

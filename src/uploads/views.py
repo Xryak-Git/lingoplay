@@ -40,3 +40,17 @@ async def add_game(
     """Adds new game users game"""
 
     return await uploads_serivce.add_game(current_user, game_create)
+
+
+@router.get("/games")
+async def games(
+    current_user: CurrentUser,
+    uploads_serivce: UploadsServ,
+    all_games: bool = False,
+    title: str | None = None,
+) -> list[GameGet]:
+    """Adds new game users game"""
+
+    if all_games:
+        return await uploads_serivce.get_all_games_with_search(title=title)
+    return await uploads_serivce.get_games_with_search(user=current_user, title=title)
