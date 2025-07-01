@@ -19,8 +19,7 @@ class UploadsService:
 
     async def get_users_video(self, user: LingoplayUsers, id: int) -> VideoGet:
         result = await self._videos_repo.filter(user_id=user.id, id=id, first=True)
-        video_get_list = [VideoGet.model_validate(row, from_attributes=True) for row in result]
-        return VideosList.model_validate({"list": video_get_list})
+        return VideoGet.model_validate(result, from_attributes=True)
 
     async def get_users_videos(self, user: LingoplayUsers) -> VideosList:
         result = await self._videos_repo.filter(user_id=user.id)
@@ -33,7 +32,7 @@ class UploadsService:
         return GameGet.model_validate(result, from_attributes=True)
 
     async def get_users_game(self, user: LingoplayUsers, id: int) -> GameGet:
-        result = await self._games_repo.filter(user_id=user.id, id=id, first=True)
+        result = await self._games_repo.filter(user_id=user.id, id=id)
         return GameGet.model_validate(result, from_attributes=True)
 
     async def get_games_with_search(self, user: LingoplayUsers, **kwargs) -> GamesList:

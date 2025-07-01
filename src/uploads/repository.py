@@ -52,19 +52,24 @@ class GamesRepository(AlchemyRepository):
         game.users.append(user)
         return await super().create_one(game)
 
-    async def filter(self, user_id: int | None = None, title: str | None = None, id: int | None = None) -> list[Games]:
+    async def filter(
+        self, user_id: int | None = None, title: str | None = None, id: int | None = None
+    ) -> list[Games] | Games | None:
         async with self._session as session:
             query = select(self.model).options(selectinload(Games.users))
 
             if user_id:
                 query = query.join(Games.users).where(LingoplayUsers.id == user_id)
 
-            if title:
-                query = query.where(Games.title.ilike(f"%{title}%"))
-
             if id:
                 query = query.where(Games.id == id)
+                res = await session.execute(query)
+                return res.scalars().first()
+
+            if title:
+                query = query.where(Games.title.ilike(f"%{title}%"))
 
             res = await session.execute(query)
 
             return res.scalars().all()
+

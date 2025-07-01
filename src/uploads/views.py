@@ -69,7 +69,6 @@ async def get_all_games(
     title: str | None = None,
 ) -> GamesList:
     """Gets and filters users games or all games"""
-
     if all:
         return await uploads_serivce.get_all_games_with_search(title=title)
     return await uploads_serivce.get_games_with_search(user=current_user, title=title)
@@ -82,4 +81,4 @@ async def get_users_game(
     game_id: int,
 ) -> GameGet:
     """Adds new game users game"""
-    return await uploads_serivce.get_games_with_search(user=current_user, id=game_id)
+    return await uploads_serivce.get_users_game(user=current_user, id=game_id)
