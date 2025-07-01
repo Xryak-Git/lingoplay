@@ -54,11 +54,11 @@ class AuthService:
     async def refresh_tokens(self, refresh_token: str) -> tuple[str, str, LingoplayUsers]:
         user_data = await self.validate_refresh_token(refresh_token)
 
-        db_token = await self._tokens_rep.get_by(refresh_token=refresh_token)
+        db_token = await self._tokens_rep.filter(refresh_token=refresh_token, first=True)
         if not db_token:
             raise HTTPException(status_code=401, detail="User not authorized") from None
 
-        user = await self._users_rep.get_by(id=user_data.get("id"))
+        user = await self._users_rep.filter(id=user_data.get("id"), first=True)
         access_token, refresh_token = await self.generate_tokens(user)
 
         await self.save_token(user.id, refresh_token)

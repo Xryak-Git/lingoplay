@@ -20,17 +20,13 @@ class UsersService:
         return user
 
     async def get(self, user_id: int) -> LingoplayUsers | None:
-        user = await self._repository.get_by(id=user_id)
+        user = await self._repository.filter(id=user_id, first=True)
         return user
 
     async def get_by_email(self, email: str) -> LingoplayUsers | None:
-        user = await self._repository.get_by(email=email)
-        return user
-
-    async def get_by_username(self, username: str) -> LingoplayUsers | None:
-        user = await self._repository.get_by(username=username)
+        user = await self._repository.filter(email=email, first=True)
         return user
 
     async def exists(self, **kwargs) -> bool:
-        user = await self._repository.get_by_or(**kwargs)
+        user = await self._repository.filter_or_(**kwargs, first=True)
         return user is not None

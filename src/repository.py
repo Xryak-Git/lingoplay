@@ -20,15 +20,11 @@ from src.errors import DatabaseCommitError, UniqueConstraintViolation
 
 class AbstractRepository(ABC):
     @abstractmethod
-    async def get_by():
+    async def filter():
         raise NotImplementedError
 
     @abstractmethod
-    async def get_by_or():
-        raise NotImplementedError
-
-    @abstractmethod
-    async def get_all():
+    async def filter_or_():
         raise NotImplementedError
 
     @abstractmethod
@@ -45,10 +41,6 @@ class AbstractRepository(ABC):
 
     @abstractmethod
     async def exists():
-        raise NotImplementedError
-
-    @abstractmethod
-    async def filter():
         raise NotImplementedError
 
 
@@ -109,17 +101,18 @@ class AlchemyRepository(AbstractRepository):
     def __init__(self, session: AsyncSession):
         self._session = session
 
-    async def get_all(self) -> list[Base]:
+    async def filter(self, first: bool = False, **kwargs) -> list[Base] | Base | None:
         async with self._session as session:
-            stmt = select(self.model)
-            res = await session.execute(stmt)
-            return res.scalars().all()
+            stmt = select(self.model).filter_by(**kwargs)
+            result = await session.execute(stmt)
+            return result.scalars().first() if first else result.scalars().all()
 
-    async def filter(self, **kwargs) -> list[Base]:
+    async def filter_or_(self, first: bool = False, **kwargs) -> list[Base] | Base | None:
         async with self._session as session:
-            query = select(self.model).filter_by(**kwargs)
-            result = await session.execute(query)
-            return result.all()
+            conditions = [getattr(self.model, key) == value for key, value in kwargs.items()]
+            stmt = select(self.model).where(or_(*conditions))
+            result = await session.execute(stmt)
+            return result.scalars().first() if first else result.scalars().all()
 
     @overload
     async def create_one(self, session: AsyncSession, data: dict) -> Base: ...
@@ -140,12 +133,6 @@ class AlchemyRepository(AbstractRepository):
             await session.refresh(data_or_instance)
             return data_or_instance
 
-    async def get_by(self, **kwargs):
-        async with self._session as session:
-            query = select(self.model).filter_by(**kwargs)
-            result = await session.execute(query)
-            return result.scalar_one_or_none()
-
     async def update_by(self, **kwargs) -> int:
         async with self._session as session:
             stmt = update(self.model).filter_by(**kwargs)
@@ -155,7 +142,7 @@ class AlchemyRepository(AbstractRepository):
 
     async def update_or_create(self, filters: dict, values: dict):
         async with self._session as session:
-            instance = await self.get_by(**filters)
+            instance = await self.filter(**filters, first=True)
 
             if instance:
                 stmt = update(self.model).filter_by(**filters).values(**values).returning(self.model)
@@ -183,13 +170,6 @@ class AlchemyRepository(AbstractRepository):
             result = await session.execute(stmt)
             await session.commit()
             return result.rowcount
-
-    async def get_by_or(self, **kwargs):
-        async with self._session as session:
-            conditions = [getattr(self.model, key) == value for key, value in kwargs.items()]
-            stmt = select(self.model).where(or_(*conditions))
-            result = await session.execute(stmt)
-            return result.scalar_one_or_none()
 
     async def exists(self, **kwargs) -> bool:
         async with self._session as session:
