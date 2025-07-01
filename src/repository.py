@@ -47,6 +47,10 @@ class AbstractRepository(ABC):
     async def exists():
         raise NotImplementedError
 
+    @abstractmethod
+    async def filter():
+        raise NotImplementedError
+
 
 class AbstractS3Repository(ABC):
     @abstractmethod
@@ -105,11 +109,17 @@ class AlchemyRepository(AbstractRepository):
     def __init__(self, session: AsyncSession):
         self._session = session
 
-    async def get_all(self):
+    async def get_all(self) -> list[Base]:
         async with self._session as session:
             stmt = select(self.model)
             res = await session.execute(stmt)
-            return [row[0].dict() for row in res.all()]
+            return res.scalars().all()
+
+    async def filter(self, **kwargs) -> list[Base]:
+        async with self._session as session:
+            query = select(self.model).filter_by(**kwargs)
+            result = await session.execute(query)
+            return result.all()
 
     @overload
     async def create_one(self, session: AsyncSession, data: dict) -> Base: ...
