@@ -14,6 +14,13 @@ class VideoWriteDb(BaseModel):
     path: str
     title: str
 
+class VideoGet(VideoWriteDb):
+    id: int
+    game_id: int
+
+class VideosList(BaseModel):
+    list: list[VideoGet]
+
 
 class GameCreate(BaseModel):
     title: str
@@ -21,3 +28,7 @@ class GameCreate(BaseModel):
 
 class GameGet(GameCreate):
     id: int
+
+
+class GamesList(BaseModel):
+    list: list[GameGet]

@@ -40,3 +40,10 @@ class TestUploadsRoutes:
         )
 
         assert response.status_code == 201, response.text
+
+        response = await client.get(
+            "/uploads/games",
+            headers=logined_user_headers,
+        )
+
+        assert response.status_code == 200, "Persona 5 Royal" in response.text
