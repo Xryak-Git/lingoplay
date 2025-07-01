@@ -20,7 +20,7 @@ class VideoRepository(AlchemyRepository):
         self._s3_repository = s3_repository
 
     async def create_one(self, data: VideoCreate) -> Videos:
-        path = f"{data.user_id}/{self._dir_name}/{data.title}{Path(data.file.filename).suffix}"
+        path = f"{data.user_id}/{self._dir_name}/{data.title}/{data.title}{Path(data.file.filename).suffix}"
 
         if await self.exists(path=path):
             raise AlreadyExistsError(self.model.__tablename__, "path", path)
