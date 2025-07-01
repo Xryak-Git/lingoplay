@@ -11,7 +11,7 @@ from src.uploads.schemas import GameCreate, GameGet, VideoCreate
 router = APIRouter()
 
 
-@router.post("/upload")
+@router.post("/videos")
 async def upload_video(
     file: Annotated[UploadFile, File()],
     title: Annotated[str, Form()],

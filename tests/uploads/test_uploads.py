@@ -19,7 +19,7 @@ class TestUploadsRoutes:
         fake_video.name = "test_video.mp4"
 
         response = await client.post(
-            "/videos/upload",
+            "/uploads/videos",
             headers=logined_user_headers,
             files={"file": ("test_video.mp4", fake_video, "video/mp4")},
             data={"title": "TestVideo", "game_id": f"{existing_game.id}"},
@@ -34,7 +34,7 @@ class TestUploadsRoutes:
         test_game = GameCreate(title="Persona 5 Royal")
 
         response = await client.post(
-            "/videos/games",
+            "/uploads/games",
             headers=logined_user_headers,
             json=test_game.model_dump(),
         )

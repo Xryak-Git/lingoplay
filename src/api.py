@@ -33,4 +33,4 @@ api_router = APIRouter(
 
 api_router.include_router(auth_router, prefix="/auth", tags=["auth"])
 api_router.include_router(users_router, prefix="/users", tags=["users"])
-api_router.include_router(video_router, prefix="/videos", tags=["videos"])
+api_router.include_router(video_router, prefix="/uploads", tags=["uploads"])
