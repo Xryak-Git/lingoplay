@@ -53,23 +53,25 @@ class GamesRepository(AlchemyRepository):
         return await super().create_one(game)
 
     async def filter(
-        self, user_id: int | None = None, title: str | None = None, id: int | None = None
+        self,
+        user_id: int | None = None,
+        title: str | None = None,
+        id: int | None = None,
+        first: bool = False,
     ) -> list[Games] | Games | None:
         async with self._session as session:
             query = select(self.model).options(selectinload(Games.users))
 
-            if user_id:
+            if user_id is not None:
                 query = query.join(Games.users).where(LingoplayUsers.id == user_id)
 
-            if id:
+            if id is not None:
                 query = query.where(Games.id == id)
-                res = await session.execute(query)
-                return res.scalars().first()
 
-            if title:
+            if title is not None:
                 query = query.where(Games.title.ilike(f"%{title}%"))
 
-            res = await session.execute(query)
+            result = await session.execute(query)
+            scalars = result.scalars()
 
-            return res.scalars().all()
-
+            return scalars.first() if first else scalars.all()

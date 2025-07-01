@@ -17,68 +17,70 @@ async def upload_video(
     title: Annotated[str, Form()],
     game_id: Annotated[int, Form()],
     current_user: CurrentUser,
-    uploads_serivce: UploadsServ,
+    uploads_service: UploadsServ,
 ) -> JSONResponse:
-    """Creates new video and uploads to S3"""
+    """Upload new video and send it for processing"""
     data = VideoCreate(file=file, title=title, game_id=game_id, user_id=current_user.id)
 
     try:
-        await uploads_serivce.add_video(data)
+        await uploads_service.add_video(data)
         return JSONResponse(
             status_code=status.HTTP_201_CREATED, content={"message": "Видео загружено и начало обрабатываться"}
         )
     except VideoAlreadyUploadedError as e:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=[{"msg": str(e)}]) from e
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=[{"msg": str(e)}],
+        ) from e
 
 
-@router.get("/videos")
-async def get_users_videos(
+@router.get("/videos", response_model=VideosList)
+async def get_user_videos(
     current_user: CurrentUser,
-    uploads_serivce: UploadsServ,
+    uploads_service: UploadsServ,
 ) -> VideosList:
-    """Gets users videos"""
-    return await uploads_serivce.get_users_videos(user=current_user)
+    """Get all videos uploaded by current user"""
+    return await uploads_service.get_user_videos(user=current_user)
 
 
-@router.get("/videos/{video_id}")
-async def get_users_video(
-    current_user: CurrentUser,
-    uploads_serivce: UploadsServ,
+@router.get("/videos/{video_id}", response_model=VideoGet)
+async def get_user_video(
     video_id: int,
+    current_user: CurrentUser,
+    uploads_service: UploadsServ,
 ) -> VideoGet:
-    """Gets users videos"""
-    return await uploads_serivce.get_users_video(user=current_user, id=video_id)
+    """Get specific video of current user by ID"""
+    return await uploads_service.get_user_video(user=current_user, video_id=video_id)
 
 
-@router.post("/games", status_code=201)
+@router.post("/games", response_model=GameGet, status_code=status.HTTP_201_CREATED)
 async def add_game(
     game_create: GameCreate,
     current_user: CurrentUser,
-    uploads_serivce: UploadsServ,
+    uploads_service: UploadsServ,
 ) -> GameGet:
-    """Adds new game users game"""
+    """Add new game for current user"""
+    return await uploads_service.add_game(current_user, game_create)
 
-    return await uploads_serivce.add_game(current_user, game_create)
 
-
-@router.get("/games")
-async def get_all_games(
+@router.get("/games", response_model=GamesList)
+async def get_games(
     current_user: CurrentUser,
-    uploads_serivce: UploadsServ,
+    uploads_service: UploadsServ,
     all: bool = False,
     title: str | None = None,
 ) -> GamesList:
-    """Gets and filters users games or all games"""
+    """Get games — either user-specific or all, with optional filtering"""
     if all:
-        return await uploads_serivce.get_all_games_with_search(title=title)
-    return await uploads_serivce.get_games_with_search(user=current_user, title=title)
+        return await uploads_service.search_all_games(title=title)
+    return await uploads_service.search_user_games(user=current_user, title=title)
 
 
-@router.get("/games/{game_id}")
-async def get_users_game(
-    current_user: CurrentUser,
-    uploads_serivce: UploadsServ,
+@router.get("/games/{game_id}", response_model=GameGet)
+async def get_user_game(
     game_id: int,
+    current_user: CurrentUser,
+    uploads_service: UploadsServ,
 ) -> GameGet:
-    """Adds new game users game"""
-    return await uploads_serivce.get_users_game(user=current_user, id=game_id)
+    """Get specific game of current user by ID"""
+    return await uploads_service.get_user_game(user=current_user, game_id=game_id)
