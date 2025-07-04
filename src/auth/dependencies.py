@@ -1,6 +1,7 @@
 from typing import Annotated
 
 import jwt
+import structlog
 from fastapi import Depends, HTTPException, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -40,7 +41,9 @@ async def get_current_user(
     token = credentials.credentials
     try:
         payload = jwt.decode(token, config.JWT_SECRET_KEY, algorithms=["HS256"])
-        return await user_service.get(user_id=payload.get("id"))
+        user = await user_service.get(user_id=payload.get("id"))
+        structlog.contextvars.bind_contextvars(user_id=user.id)
+        return user
     except jwt.ExpiredSignatureError:
         raise HTTPException(status_code=401, detail="Token expired") from None
     except jwt.InvalidTokenError:
