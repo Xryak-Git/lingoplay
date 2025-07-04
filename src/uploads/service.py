@@ -1,3 +1,5 @@
+import structlog
+
 from src.errors import AlreadyExistsError
 from src.repository import AbstractRepository
 from src.uploads.errors import VideoAlreadyUploadedError
@@ -5,6 +7,7 @@ from src.uploads.schemas import GameCreate, GameGet, GamesList, VideoCreate, Vid
 from src.uploads.utils import extract_screenshot
 from src.users.models import LingoplayUsers
 
+logger = structlog.get_logger()
 
 class UploadsService:
     def __init__(self, videos_repo: AbstractRepository, games_repo: AbstractRepository):
@@ -18,12 +21,13 @@ class UploadsService:
             screenshot_bytes = await extract_screenshot(video_create.video)
             video_create.thumblnail = screenshot_bytes
         except ValueError as e:
-            pass
+            logger.error(e)
 
         try:
             video = await self._videos_repo.create_one(video_create)
             return VideoGet.model_validate(video, from_attributes=True)
         except AlreadyExistsError as e:
+            logger.error(e)
             raise VideoAlreadyUploadedError(video_create.title) from e
 
     async def get_user_video(self, user: LingoplayUsers, video_id: int) -> VideoGet:
