@@ -2,6 +2,7 @@ from src.errors import AlreadyExistsError
 from src.repository import AbstractRepository
 from src.uploads.errors import VideoAlreadyUploadedError
 from src.uploads.schemas import GameCreate, GameGet, GamesList, VideoCreate, VideoGet, VideosList
+from src.uploads.utils import extract_screenshot
 from src.users.models import LingoplayUsers
 
 
@@ -11,7 +12,14 @@ class UploadsService:
         self._games_repo = games_repo
 
     # Videos
+    # TODO: добавить логгер
     async def add_video(self, video_create: VideoCreate) -> VideoGet:
+        try:
+            screenshot_bytes = await extract_screenshot(video_create.video)
+            video_create.thumblnail = screenshot_bytes
+        except ValueError as e:
+            pass
+
         try:
             video = await self._videos_repo.create_one(video_create)
             return VideoGet.model_validate(video, from_attributes=True)

@@ -22,7 +22,7 @@ class TestUploadsRoutes(BaseTestClass):
 
         response = await self.post(
             "/videos",
-            files={"file": ("test_video.mp4", fake_video, "video/mp4")},
+            files={"video": ("test_video.mp4", fake_video, "video/mp4")},
             data={"title": "TestVideo", "game_id": str(existing_game.id)},
         )
 

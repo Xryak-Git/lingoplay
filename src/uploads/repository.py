@@ -20,18 +20,25 @@ class VideoRepository(AlchemyRepository):
         self._s3_repository = s3_repository
 
     async def create_one(self, data: VideoCreate) -> Videos:
-        path = f"{data.user_id}/{self._dir_name}/{data.title}/{data.title}{Path(data.file.filename).suffix}"
+        dir_path = f"{data.user_id}/{self._dir_name}/{data.title}"
+        video_path = f"{dir_path}/{data.title}{Path(data.video.filename).suffix}"
+        thumblnail_path = f"{dir_path}/thumblnail.png"
 
-        if await self.exists(path=path):
-            raise AlreadyExistsError(self.model.__tablename__, "path", path)
+        if await self.exists(path=video_path):
+            raise AlreadyExistsError(self.model.__tablename__, "path", video_path)
 
-        url = await self._s3_repository.upload_file(data.file.file, path)
+        video_url = await self._s3_repository.upload_file(data.video.file, video_path)
+        thumblnail_url = (
+            await self._s3_repository.upload_file(data.thumblnail, thumblnail_path) if data.thumblnail else None
+        )
 
         async with self._session as session:
             result = await session.execute(select(Games).where(Games.id == data.game_id))
             game = result.scalars().one()
 
-            video = Videos(user_id=data.user_id, path=url, title=data.title, game=game)
+            video = Videos(
+                user_id=data.user_id, path=video_url, thumblnail_path=thumblnail_url, title=data.title, game=game
+            )
             session.add(video)
             await session.commit()
             await session.refresh(video)

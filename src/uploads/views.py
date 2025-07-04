@@ -13,14 +13,14 @@ router = APIRouter()
 
 @router.post("/videos")
 async def upload_video(
-    file: Annotated[UploadFile, File()],
+    video: Annotated[UploadFile, File()],
     title: Annotated[str, Form()],
     game_id: Annotated[int, Form()],
     current_user: CurrentUser,
     uploads_service: UploadsServ,
 ) -> JSONResponse:
     """Upload new video and send it for processing"""
-    data = VideoCreate(file=file, title=title, game_id=game_id, user_id=current_user.id)
+    data = VideoCreate(video=video, title=title, game_id=game_id, user_id=current_user.id)
 
     try:
         await uploads_service.add_video(data)
