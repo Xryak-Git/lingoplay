@@ -10,16 +10,13 @@ class VideoCreate(BaseModel):
     thumblnail: bytes | None = None
 
 
-class VideoWriteDb(BaseModel):
-    user_id: int
-    path: str
-    title: str
-
-
-class VideoGet(VideoWriteDb):
+class VideoGet(BaseModel):
     id: int
     game_id: int
-
+    user_id: int
+    path: str
+    thumblnail_path: str | None = None
+    title: str
 
 class VideosList(BaseModel):
     list: list[VideoGet]
