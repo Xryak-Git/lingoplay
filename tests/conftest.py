@@ -5,7 +5,7 @@ from httpx import ASGITransport, AsyncClient
 
 from src.database.core import get_session
 from src.main import app
-from src.repository import AbstractS3Repository, get_s3_repo
+from src.s3 import AbstractS3Repository, get_s3_repo
 from tests.fixtures.db import override_get_session
 
 pytest_plugins = [

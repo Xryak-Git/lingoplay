@@ -4,7 +4,7 @@ from pathlib import Path
 import pytest  # noqa: F401
 import pytest_asyncio
 
-from src.repository import AbstractS3Repository
+from src.s3 import AbstractS3Repository
 from tests.constants import TEST_DATA_DIR
 
 
@@ -46,6 +46,9 @@ class LocalFolderRepository(AbstractS3Repository):
         file_path = self.folder_path / object_name
         if file_path.exists():
             file_path.unlink()
+
+    async def download_to_tempfile():
+        pass
 
     @property
     def url(self) -> str:

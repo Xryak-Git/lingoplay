@@ -5,7 +5,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from src.errors import AlreadyExistsError
-from src.repository import AbstractS3Repository, AlchemyRepository
+from src.repository import AlchemyRepository
+from src.s3 import AbstractS3Repository
 from src.uploads.models import Games, Videos
 from src.uploads.schemas import GameCreate, VideoCreate
 from src.users.models import LingoplayUsers

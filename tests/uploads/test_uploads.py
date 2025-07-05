@@ -3,7 +3,7 @@ import io
 import pytest
 from fastapi import Response
 
-from src.repository import AbstractS3Repository
+from src.s3 import AbstractS3Repository
 from src.uploads.models import Games, Videos
 from src.uploads.schemas import GameCreate
 from tests.conftest import BaseTestClass

@@ -4,7 +4,7 @@ from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database.core import get_session
-from src.repository import S3Repo
+from src.s3 import S3Repo
 from src.uploads.repository import GamesRepository, VideoRepository
 from src.uploads.service import UploadsService
 
