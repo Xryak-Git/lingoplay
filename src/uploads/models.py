@@ -27,6 +27,7 @@ class Videos(Base):
     id: Mapped[PrimaryKey]
     title: Mapped[str] = mapped_column(index=True)
     path: Mapped[str] = mapped_column(unique=True)
+    s3_key: Mapped[str] = mapped_column(unique=True)
     thumblnail_path: Mapped[str] = mapped_column(nullable=True)
 
     user_id: Mapped[int] = mapped_column(ForeignKey("lingoplay_users.id", ondelete="CASCADE"), nullable=False)

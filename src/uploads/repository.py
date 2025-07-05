@@ -37,6 +37,7 @@ class VideoRepository(AlchemyRepository):
                 user_id=data.user_id,
                 title=data.title,
                 path=video_url,
+                s3_key=video_path,
                 thumblnail_path=thumbnail_url,
                 game=game,
             )
