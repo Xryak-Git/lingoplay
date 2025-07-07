@@ -1,6 +1,8 @@
 from fastapi import UploadFile
 from pydantic import BaseModel
 
+from src.uploads.models import Videos
+
 
 class VideoCreate(BaseModel):
     user_id: int
@@ -18,6 +20,7 @@ class VideoGet(BaseModel):
     thumblnail_path: str | None = None
     title: str
 
+
 class VideosList(BaseModel):
     list: list[VideoGet]
 
@@ -32,3 +35,12 @@ class GameGet(GameCreate):
 
 class GamesList(BaseModel):
     list: list[GameGet]
+
+
+class LingoplayImage(BaseModel):
+    video: Videos
+    path: str
+    text: str
+
+    class Config:
+        arbitrary_types_allowed = True
