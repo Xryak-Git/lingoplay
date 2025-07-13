@@ -100,12 +100,16 @@ class AlchemyRepository(AbstractRepository):
             await session.refresh(data_or_instance)
             return data_or_instance
 
-    async def update_by(self, **kwargs) -> int:
+    @handle_integrity_errors
+    async def update_by(self, session: AsyncSession, filters: dict, **kwargs) -> int:
         async with self._session as session:
-            stmt = update(self.model).filter_by(**kwargs)
+            stmt = update(self.model).filter_by(**filters).values(**kwargs)
             result = await session.execute(stmt)
             await session.commit()
-            return result.rowcount
+
+            querey = select(self.model).filter_by(**filters)
+            result = await session.execute(querey)
+            return result.scalar_one_or_none()
 
     async def update_or_create(self, filters: dict, values: dict):
         async with self._session as session:
