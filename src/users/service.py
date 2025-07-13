@@ -2,7 +2,7 @@ from src.errors import UniqueConstraintViolation
 from src.repository import AbstractRepository
 from src.users.errors import UserAlreadyExistsError
 from src.users.models import LingoplayUsers
-from src.users.schemas import UserCreate
+from src.users.schemas import UserCreate, UserUpdate
 
 
 class UsersService:
@@ -30,3 +30,11 @@ class UsersService:
     async def exists(self, **kwargs) -> bool:
         user = await self._repository.filter_or_(**kwargs, first=True)
         return user is not None
+
+    async def update(self, id: int, fields: UserUpdate) -> LingoplayUsers:
+        try:
+            user = await self._repository.update_by(filters={"id": id}, username=fields.username)
+        except UniqueConstraintViolation as e:
+            raise UserAlreadyExistsError(field=e.field, value=e.value) from e
+
+        return user

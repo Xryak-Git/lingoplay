@@ -62,3 +62,7 @@ class UserLoginResponse(BaseModel):
 
     token: str | None = None
     user: UserRead
+
+
+class UserUpdate(BaseModel):
+    username: str | None = None
